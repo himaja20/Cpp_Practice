@@ -3,6 +3,8 @@
 #include<string>
 #include<list>
 #include<boost/tokenizer.hpp>
+#include<map>
+#include<vector>
 
 using namespace std;
 using namespace boost;
@@ -13,12 +15,18 @@ int moduleCount = 0;
 int moduleBaseAddress = 0;
 int lNumber = 0;
 int lOffset = 0;
+
+//Data Structures
 typedef struct eachToken{
   string value;
   int lineNumber;
   int lineOffset;  
 }token;
 list<token> tokens;
+
+//map<int,int> module;
+map<string,int> symbolTable;
+vector<string> symbols;
 
 void second_pass(){
   cout << "dummy" << endl ;
@@ -172,6 +180,9 @@ void defListRead(){
         address = atoi(address_str.c_str());
       }  
       cout << symbol + ": " <<  address << endl;
+      symbolTable[symbol] = moduleBaseAddress + address;
+      symbols.push_back(symbol);
+
     }// end for
 
   }
@@ -195,10 +206,13 @@ void first_pass(){
     cout << "moduleCount:  " << moduleCount << endl;
     cout << "modulebaseAddress : " << moduleBaseAddress << endl;
     }
+    vector<string>::iterator it;
+    cout << "Symbol Table" << endl;
+    for(it=symbols.begin() ; it < symbols.end(); it++) {
+      cout << *it << " " <<symbolTable[*it] << endl;
+    }
   }
-  return;
 }
-
 
 int main(int argc, char* argv[]) {
   FILE_NAME = argv[1];
