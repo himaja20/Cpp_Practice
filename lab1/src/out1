@@ -1,0 +1,115 @@
+token :  1  lineNumber: 1  lineOffset  : 0
+token :  xy  lineNumber: 1  lineOffset  : 2
+token :  2  lineNumber: 1  lineOffset  : 5
+token :  2  lineNumber: 2  lineOffset  : 0
+token :  z  lineNumber: 2  lineOffset  : 2
+token :  xy  lineNumber: 2  lineOffset  : 4
+token :  5  lineNumber: 3  lineOffset  : 0
+token :  R  lineNumber: 3  lineOffset  : 2
+token :  1004  lineNumber: 3  lineOffset  : 4
+token :  I  lineNumber: 3  lineOffset  : 10
+token :  5678  lineNumber: 3  lineOffset  : 12
+token :  E  lineNumber: 3  lineOffset  : 18
+token :  2000  lineNumber: 3  lineOffset  : 20
+token :  R  lineNumber: 3  lineOffset  : 26
+token :  8002  lineNumber: 3  lineOffset  : 28
+token :  E  lineNumber: 3  lineOffset  : 34
+token :  7001  lineNumber: 3  lineOffset  : 36
+token :  0  lineNumber: 4  lineOffset  : 0
+token :  1  lineNumber: 5  lineOffset  : 0
+token :  z  lineNumber: 5  lineOffset  : 2
+token :  6  lineNumber: 6  lineOffset  : 0
+token :  R  lineNumber: 6  lineOffset  : 2
+token :  8001  lineNumber: 6  lineOffset  : 4
+token :  E  lineNumber: 6  lineOffset  : 10
+token :  1000  lineNumber: 6  lineOffset  : 12
+token :  E  lineNumber: 6  lineOffset  : 18
+token :  1000  lineNumber: 6  lineOffset  : 20
+token :  E  lineNumber: 6  lineOffset  : 26
+token :  3000  lineNumber: 6  lineOffset  : 28
+token :  R  lineNumber: 6  lineOffset  : 34
+token :  1002  lineNumber: 6  lineOffset  : 36
+token :  A  lineNumber: 6  lineOffset  : 42
+token :  1010  lineNumber: 6  lineOffset  : 44
+token :  0  lineNumber: 7  lineOffset  : 0
+token :  1  lineNumber: 8  lineOffset  : 0
+token :  z  lineNumber: 8  lineOffset  : 2
+token :  2  lineNumber: 9  lineOffset  : 0
+token :  R  lineNumber: 9  lineOffset  : 2
+token :  5001  lineNumber: 9  lineOffset  : 4
+token :  E  lineNumber: 9  lineOffset  : 10
+token :  4000  lineNumber: 9  lineOffset  : 12
+token :  1  lineNumber: 10  lineOffset  : 0
+token :  z  lineNumber: 10  lineOffset  : 2
+token :  2  lineNumber: 10  lineOffset  : 4
+token :  2  lineNumber: 11  lineOffset  : 0
+token :  xy  lineNumber: 11  lineOffset  : 2
+token :  z  lineNumber: 11  lineOffset  : 5
+token :  3  lineNumber: 12  lineOffset  : 0
+token :  A  lineNumber: 12  lineOffset  : 2
+token :  8000  lineNumber: 12  lineOffset  : 4
+token :  E  lineNumber: 12  lineOffset  : 10
+token :  1001  lineNumber: 12  lineOffset  : 12
+token :  E  lineNumber: 12  lineOffset  : 18
+token :  2000  lineNumber: 12  lineOffset  : 20
+in if deflistread
+xy: 2
+count : 2
+symbol: z
+symbol: xy
+program text count : 5
+InstructionType: R
+address of the instruction : 1004
+InstructionType: I
+address of the instruction : 5678
+InstructionType: E
+address of the instruction : 2000
+InstructionType: R
+address of the instruction : 8002
+InstructionType: E
+address of the instruction : 7001
+moduleCount:  1
+modulebaseAddress : 5
+in if deflistread
+count : 1
+symbol: z
+program text count : 6
+InstructionType: R
+address of the instruction : 8001
+InstructionType: E
+address of the instruction : 1000
+InstructionType: E
+address of the instruction : 1000
+InstructionType: E
+address of the instruction : 3000
+InstructionType: R
+address of the instruction : 1002
+InstructionType: A
+address of the instruction : 1010
+moduleCount:  2
+modulebaseAddress : 11
+in if deflistread
+count : 1
+symbol: z
+program text count : 2
+InstructionType: R
+address of the instruction : 5001
+InstructionType: E
+address of the instruction : 4000
+moduleCount:  3
+modulebaseAddress : 13
+in if deflistread
+z: 2
+count : 2
+symbol: xy
+symbol: z
+program text count : 3
+InstructionType: A
+address of the instruction : 8000
+InstructionType: E
+address of the instruction : 1001
+InstructionType: E
+address of the instruction : 2000
+moduleCount:  4
+modulebaseAddress : 16
+dummy
