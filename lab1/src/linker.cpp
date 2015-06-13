@@ -40,14 +40,9 @@ void getNextTokens() {
   string myLine;
   while(!myReadFile.eof()){
     getline(myReadFile,myLine);
-   // lNumber++;
-    //lastLineOffset = strlen(myLine.c_str()) + 1;
-//    cout << myLine  << "   " << "lastLineOffset  : " << lastLineOffset << endl;
-    //lastLineNumber = lNumber;
-   // cout << ">>  " << strlen(myLine.c_str()) << endl;
-   // if(myLine[0] != '\0') {
-        lNumber++;
-    //}
+    if(!myReadFile.fail()) {
+      lNumber++;
+    }
 
     char_separator<char> sep(" \n\t\0");
     tokenizer<char_separator<char> > toks(myLine,sep);
@@ -59,72 +54,66 @@ void getNextTokens() {
       t.lineNumber = lNumber;
       t.lineOffset =(it.base() - myLine.begin() - it->size()) + 1;
       lastLineOffset = strlen(myLine.c_str()) + 1;
-      cout << "lastLineOffset in for loop : " << lastLineOffset << endl;
       lastLineNumber = lNumber;
       tokens.insert(tokens.end(),t);
-//      cout << "token :  " << t.value << "  lineNumber: " << t.lineNumber << "  lineOffset  : " << t.lineOffset << endl;
+      //      cout << "token :  " << t.value << "  lineNumber: " << t.lineNumber << "  lineOffset  : " << t.lineOffset << endl;
     }
-   // if(myLine[0] != '\0') {
+    if(!myReadFile.fail()) {
       lastLineOffset = strlen(myLine.c_str()) + 1;
       lastLineNumber = lNumber;
-   // }
+    }
   }
 
   for(list<token>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
     cout << "token :  " << it->value << "  lineNumber: " << it->lineNumber << "  lineOffset  : " << it->lineOffset << endl;
-  
   }
-  cout << "lastLineOffset before exiting getNextTokens : " << lastLineOffset << endl;
-  return;
 }
 
 void _parseerror(int errcode,token t) {
-   static char* errstr[] = {
-      "NUM_EXPECTED", // Number expect
-      "SYM_EXPECTED", // Symbol Expected
-      "ADDR_EXPECTED", // Addressing Expected
-      "SYM_TOLONG", // Symbol Name is to long
-      "TO_MANY_DEF_IN_MODULE", // > 16
-      "TO_MANY_USE_IN_MODULE", // > 16
-      "TO_MANY_INSTR" // total num_instr exceeds memory size (512)
-    };
-    printf("Parse Error line %d offset %d: %s\n", t.lineNumber,t.lineOffset, errstr[errcode]);
-    exit(0);
+  static const char* errstr[] = {
+    "NUM_EXPECTED", // Number expect
+    "SYM_EXPECTED", // Symbol Expected
+    "ADDR_EXPECTED", // Addressing Expected
+    "SYM_TOLONG", // Symbol Name is to long
+    "TO_MANY_DEF_IN_MODULE", // > 16
+    "TO_MANY_USE_IN_MODULE", // > 16
+    "TO_MANY_INSTR" // total num_instr exceeds memory size (512)
+  };
+  printf("Parse Error line %d offset %d: %s\n", t.lineNumber,t.lineOffset, errstr[errcode]);
+  exit(0);
 }
 
 
 token tokenExistenceCheck(int errCode){
 
   cout << "in tokenExistenceCheck " << endl;
-token t;
-if(!tokens.empty()){
-  t = tokens.front(); 
-  cout << "token list not empty" << endl;
-}
-else{
-  t.lineNumber = lastLineNumber;
-  t.lineOffset = lastLineOffset;
-  cout << "lastLineOffset before assiging : " <<lastLineOffset << endl;
-  cout << "parseError in Token Existence check : " << t.lineOffset << endl;
-  _parseerror(errCode,t);
-}
-return t;
+  token t;
+  if(!tokens.empty()){
+    t = tokens.front(); 
+    cout << "token list not empty" << endl;
+  }
+  else{
+    t.lineNumber = lastLineNumber;
+    t.lineOffset = lastLineOffset;
+    _parseerror(errCode,t);
+  }
+  return t;
 }
 
 int instructionTypeCheck(){
 
-token t =  tokenExistenceCheck(2);
+  token t =  tokenExistenceCheck(2);
   cout << "instructiontype :  " << t.value << endl;
   if ((t.value == "R")){
     return 1;}
   else if ((t.value == "I")){
-     return 2;
+    return 2;
   }
   else if ((t.value == "A")){
-     return 3;
+    return 3;
   }
   else if ((t.value == "E")){
-     return 4;
+    return 4;
   }
   else{
     _parseerror(2,t);
@@ -139,23 +128,23 @@ int digitCheck(string listType){
   int errCode = 0;
 
   t = tokenExistenceCheck(0);
-  
+
   string valToCheck = t.value;
 
   if (isdigit(valToCheck.c_str()[0])){
     returnVal = atoi(valToCheck.c_str());
-  
-   if (returnVal > 16){
-    if (listType == "def"){
+
+    if (returnVal > 16){
+      if (listType == "def"){
         _parseerror(4,t);}
-    else if (listType == "use") {
+      else if (listType == "use") {
         _parseerror(5,t);}
-   }
-   
-   if (listType == "instr"){
+    }
+
+    if (listType == "instr"){
       if ((moduleBaseAddress + returnVal) > 512){
         _parseerror(6,t);}
-   }
+    }
     return returnVal;
   } 
   else{
@@ -169,7 +158,7 @@ int addressCheck(){
   token t;
   int returnVal;
 
-  
+
   t = tokenExistenceCheck(0);
   string valToCheck = t.value;
   int addrLen = strlen(valToCheck.c_str());
@@ -179,19 +168,19 @@ int addressCheck(){
     if (addrLen != 4){
       _parseerror(0,t);}
     else{
-    returnVal = atoi(valToCheck.c_str());
-    return returnVal;
-     } 
+      returnVal = atoi(valToCheck.c_str());
+      return returnVal;
+    } 
   }
-    else{
-      _parseerror(0,t);
-    }
+  else{
+    _parseerror(0,t);
+  }
 }
 
 bool symbolCheck(){
 
   token t = tokenExistenceCheck(1);
-  
+
   if (isdigit(t.value.c_str()[0])){
     _parseerror(1,t);
     return false;}
@@ -213,33 +202,33 @@ void programTextRead(){
 
   for (int i=0; i<count; i++){
     //reading instruction type
-  int instrType = instructionTypeCheck();
-  
-  tokens.pop_front();
+    int instrType = instructionTypeCheck();
 
-  switch (instrType) {
+    tokens.pop_front();
 
-    case 1 :
-    //relative type
-    break;
+    switch (instrType) {
 
-    case 2:
-    //immediate type
-    break;
+      case 1 :
+        //relative type
+        break;
 
-    case 3:
-    //absolute type
-    break;
+      case 2:
+        //immediate type
+        break;
 
-    case 4:
-    //extern type
-    break;
+      case 3:
+        //absolute type
+        break;
 
-  }
+      case 4:
+        //extern type
+        break;
 
-  tokens.pop_front();
+    }
 
-//    addressValue = tokens.front().value;
+    tokens.pop_front();
+
+    //    addressValue = tokens.front().value;
     if (addressCheck() > 0){
       cout << "address of the instruction : " <<  endl;
     }
@@ -282,32 +271,32 @@ void defListRead(){
   count = digitCheck("def");
   tokens.pop_front();
 
-    for (int i=0;i < count;i++){
+  for (int i=0;i < count;i++){
 
-      //checking symbols
-      symbolCheck();
-      string symbol = tokens.front().value;
-      tokens.pop_front();
+    //checking symbols
+    symbolCheck();
+    string symbol = tokens.front().value;
+    tokens.pop_front();
 
-      //checking address
-      addressCheck();
-      string address_str = tokens.front().value;
-      tokens.pop_front();
-      if (!(isdigit(address_str.c_str()[0])))
-      {
-        cout << "error address" << endl;
-      }
-      else
-      {
-        address = atoi(address_str.c_str());
-      }  
-      cout << symbol + ": " <<  address << endl;
-      symbolTable[symbol] = moduleBaseAddress + address;
-      symbols.push_back(symbol);
+    //checking address
+    addressCheck();
+    string address_str = tokens.front().value;
+    tokens.pop_front();
+    if (!(isdigit(address_str.c_str()[0])))
+    {
+      cout << "error address" << endl;
+    }
+    else
+    {
+      address = atoi(address_str.c_str());
+    }  
+    cout << symbol + ": " <<  address << endl;
+    symbolTable[symbol] = moduleBaseAddress + address;
+    symbols.push_back(symbol);
 
-    }// end for
+  }// end for
 
-  }
+}
 
 
 
@@ -316,11 +305,11 @@ void first_pass(){
   if(myReadFile.good() && !myReadFile.eof()){
     getNextTokens();
     while (!tokens.empty()) {
-    defListRead();
-    useListRead();
-    programTextRead();
-    cout << "moduleCount:  " << moduleCount << endl;
-    cout << "modulebaseAddress : " << moduleBaseAddress << endl;
+      defListRead();
+      useListRead();
+      programTextRead();
+      cout << "moduleCount:  " << moduleCount << endl;
+      cout << "modulebaseAddress : " << moduleBaseAddress << endl;
     }
     vector<string>::iterator it;
     cout << "Symbol Table" << endl;
