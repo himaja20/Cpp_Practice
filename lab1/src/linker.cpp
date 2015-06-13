@@ -7,6 +7,7 @@
 #include<map>
 #include<vector>
 #include<utility>
+#include<iomanip>
 
 using namespace std;
 using namespace boost;
@@ -19,6 +20,7 @@ int lNumber = 0;
 int lOffset = 0;
 int lastLineOffset;
 int lastLineNumber;
+int memMapCounter = 0;
 //Data Structures
 typedef struct eachToken{
   string value;
@@ -27,17 +29,13 @@ typedef struct eachToken{
 }token;
 list<token> tokens;
 list<string> symbolsList;
+vector<string> useList;
 //map<int,int> module;
 map<string,pair<int,int> > symbolTable;
 vector<string> symbols;
 map<int,int> module;
 
-void second_pass(){
-  cout << "dummy" << endl ;
-  return;
-}
 void getNextTokens() {
-
   string myLine;
   while(!myReadFile.eof()){
     getline(myReadFile,myLine);
@@ -66,8 +64,13 @@ void getNextTokens() {
   }
 
   for(list<token>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
-    cout << "token :  " << it->value << "  lineNumber: " << it->lineNumber << "  lineOffset  : " << it->lineOffset << endl;
+  //  cout << "token :  " << it->value << "  lineNumber: " << it->lineNumber << "  lineOffset  : " << it->lineOffset << endl;
   }
+}
+
+void _printMemMap(int address){
+  
+      cout << setw(3) << setfill('0') << memMapCounter << ": " << address << endl;
 }
 
 void _parseerror(int errcode,token t) {
@@ -102,7 +105,6 @@ token tokenExistenceCheck(int errCode){
 int instructionTypeCheck(){
 
   token t =  tokenExistenceCheck(2);
-  cout << "instructiontype :  " << t.value << endl;
   if ((t.value == "R")){
     return 1;}
   else if ((t.value == "I")){
@@ -186,49 +188,60 @@ bool symbolCheck(){
   }
 }
 
-void programTextRead(){
-cout << "in ProgramTextRead" << endl;
+void programTextRead(bool secondpass){
   int count = digitCheck("instr");
   string instructionType; 
-  int addressValue;
+  int address;
 
   tokens.pop_front();
 
   for (int i=0; i<count; i++){
     //reading instruction type
     int instrType = instructionTypeCheck();
-
+    char instType = tokens.front().value[0];
+    tokens.pop_front();
+    
+    address = addressCheck();
     tokens.pop_front();
 
-    switch (instrType) {
-
-      case 1 :
+    if(secondpass) {
+     switch (instType) {
+      case 'R' :
         //relative type
+        _printMemMap(moduleBaseAddress + address);
         break;
 
-      case 2:
+      case 'I':
         //immediate type
-        break;
+        _printMemMap(address);
+      break;
 
-      case 3:
+      case 'A':
         //absolute type
+        _printMemMap(address);
         break;
 
-      case 4:
+      case 'E':
         //extern type
+         int operand = address % 1000;
+         string symbolUsed = useList[operand];
+         int symbolTableAddress = symbolTable[symbolUsed].first;
+
+         address = (address / 1000)*1000 + symbolTableAddress;
+        _printMemMap(address);
+
         break;
 
+      }
+      memMapCounter++;
     }
     //    addressValue = tokens.front().value;
-     addressCheck();
-    tokens.pop_front();
     }
   
   moduleBaseAddress = moduleBaseAddress + count;
   moduleCount++;
   module[moduleCount] = moduleBaseAddress;
 
-  cout << "before for" << endl ; 
   for (list<string>::iterator it = symbolsList.begin(); it != symbolsList.end(); ++it){
     if(symbolTable[*it].first >  moduleBaseAddress){
       cout << "Warning: Module " << moduleCount << ": " << *it << " to big " << symbolTable[*it].first << " (max=" << moduleBaseAddress - 1 << ") assume zero relative" << endl;
@@ -242,22 +255,14 @@ cout << "in ProgramTextRead" << endl;
 void useListRead(){
   int count = digitCheck("use");
   tokens.pop_front();
-  if (count == -1){
-    cout << "count error" << endl;
-  }
-  else{
-    cout << "count : " << count << endl; 
-  }
+  
   //reading symbols
   while(count != 0 ) {
 
-    if (symbolCheck()){
-      cout << "symbol: " + tokens.front().value << endl;
-      tokens.pop_front();}
-    else{
-      cout << "symbol error in use list" << endl;
-    }
-    count--;
+     symbolCheck();
+     useList.push_back(tokens.front().value);
+     tokens.pop_front();
+     count--;
   }
 }
 
@@ -292,6 +297,32 @@ void defListRead(){
     }
   }// end for
 }
+void reset() {
+  moduleCount = 0;
+  moduleBaseAddress = 0;
+  lNumber = 0;
+  lOffset = 0;
+  lastLineOffset = 0;
+  lastLineNumber = 0;
+  memMapCounter = 0;
+}
+
+void second_pass(){
+    reset();
+    myReadFile.open(FILE_NAME,ios::in | ios::out);
+      if(myReadFile.good() && !myReadFile.eof()){
+         getNextTokens();
+         cout << "Memory Map" << endl;
+         while (!tokens.empty()) {
+           defListRead();
+           useListRead();
+           programTextRead(true);
+           useList.clear();
+         }
+      }
+      myReadFile.close();
+}
+
 
 void first_pass(){
   string multipleDefinitions = "Error: This variable is multiple times defined; first value used";
@@ -301,7 +332,7 @@ void first_pass(){
     while (!tokens.empty()) {
       defListRead();
       useListRead();
-      programTextRead();
+      programTextRead(false);
     }
     vector<string>::iterator it;
     cout << "Symbol Table" << endl;
@@ -314,8 +345,10 @@ void first_pass(){
       }
       cout << endl; 
     }
-
+    tokens.clear();
+    cout << endl;
   }
+  myReadFile.close();
 }
 
 int main(int argc, char* argv[]) {
