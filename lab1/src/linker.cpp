@@ -6,6 +6,7 @@
 #include<boost/tokenizer.hpp>
 #include<map>
 #include<vector>
+#include<utility>
 
 using namespace std;
 using namespace boost;
@@ -25,16 +26,16 @@ typedef struct eachToken{
   int lineOffset;  
 }token;
 list<token> tokens;
-
+list<string> symbolsList;
 //map<int,int> module;
-map<string,int> symbolTable;
+map<string,pair<int,int> > symbolTable;
 vector<string> symbols;
+map<int,int> module;
 
 void second_pass(){
   cout << "dummy" << endl ;
   return;
 }
-
 void getNextTokens() {
 
   string myLine;
@@ -86,11 +87,9 @@ void _parseerror(int errcode,token t) {
 
 token tokenExistenceCheck(int errCode){
 
-  cout << "in tokenExistenceCheck " << endl;
   token t;
   if(!tokens.empty()){
     t = tokens.front(); 
-    cout << "token list not empty" << endl;
   }
   else{
     t.lineNumber = lastLineNumber;
@@ -154,7 +153,6 @@ int digitCheck(string listType){
 
 int addressCheck(){
 
-  cout << "in address check" << endl;
   token t;
   int returnVal;
 
@@ -165,12 +163,8 @@ int addressCheck(){
 
 
   if (isdigit(valToCheck.c_str()[0])) {
-    if (addrLen != 4){
-      _parseerror(0,t);}
-    else{
       returnVal = atoi(valToCheck.c_str());
       return returnVal;
-    } 
   }
   else{
     _parseerror(0,t);
@@ -193,10 +187,10 @@ bool symbolCheck(){
 }
 
 void programTextRead(){
-
+cout << "in ProgramTextRead" << endl;
   int count = digitCheck("instr");
   string instructionType; 
-  string addressValue;
+  int addressValue;
 
   tokens.pop_front();
 
@@ -225,19 +219,24 @@ void programTextRead(){
         break;
 
     }
-
-    tokens.pop_front();
-
     //    addressValue = tokens.front().value;
-    if (addressCheck() > 0){
-      cout << "address of the instruction : " <<  endl;
-    }
-    else { cout << "address of the instruction Error in Program Text" << endl; }
+     addressCheck();
     tokens.pop_front();
-  }
+    }
+  
   moduleBaseAddress = moduleBaseAddress + count;
   moduleCount++;
+  module[moduleCount] = moduleBaseAddress;
 
+  cout << "before for" << endl ; 
+  for (list<string>::iterator it = symbolsList.begin(); it != symbolsList.end(); ++it){
+    if(symbolTable[*it].first >  moduleBaseAddress){
+      cout << "Warning: Module " << moduleCount << ": " << *it << " to big " << symbolTable[*it].first << " (max=" << moduleBaseAddress - 1 << ") assume zero relative" << endl;
+      symbolTable[*it].first = 0;
+  }
+  }  
+
+  symbolsList.clear();
 }
 
 void useListRead(){
@@ -264,9 +263,9 @@ void useListRead(){
 
 void defListRead(){
 
-  cout << "in if deflistread" << endl;
   int count;
   int address;
+  map<string,int> symbolCount;
 
   count = digitCheck("def");
   tokens.pop_front();
@@ -276,31 +275,26 @@ void defListRead(){
     //checking symbols
     symbolCheck();
     string symbol = tokens.front().value;
+    symbolsList.push_back(symbol);
+    
+
+
     tokens.pop_front();
 
     //checking address
-    addressCheck();
-    string address_str = tokens.front().value;
+    address = addressCheck();
     tokens.pop_front();
-    if (!(isdigit(address_str.c_str()[0])))
-    {
-      cout << "error address" << endl;
+    if (symbolTable.count(symbol) > 0){
+      symbolTable[symbol].second = 1;
+    } else{
+      symbolTable[symbol] = make_pair(moduleBaseAddress + address,0);
+      symbols.push_back(symbol);
     }
-    else
-    {
-      address = atoi(address_str.c_str());
-    }  
-    cout << symbol + ": " <<  address << endl;
-    symbolTable[symbol] = moduleBaseAddress + address;
-    symbols.push_back(symbol);
-
   }// end for
-
 }
 
-
-
 void first_pass(){
+  string multipleDefinitions = "Error: This variable is multiple times defined; first value used";
   myReadFile.open(FILE_NAME,ios::in | ios::out);
   if(myReadFile.good() && !myReadFile.eof()){
     getNextTokens();
@@ -308,17 +302,21 @@ void first_pass(){
       defListRead();
       useListRead();
       programTextRead();
-      cout << "moduleCount:  " << moduleCount << endl;
-      cout << "modulebaseAddress : " << moduleBaseAddress << endl;
     }
     vector<string>::iterator it;
     cout << "Symbol Table" << endl;
+ //   cout << symbols.front() << endl;
+  
     for(it=symbols.begin() ; it < symbols.end(); it++) {
-      cout << *it << " " <<symbolTable[*it] << endl;
+      cout << *it << "=" <<symbolTable[*it].first; 
+      if (symbolTable[*it].second == 1){
+        cout <<" "<<  multipleDefinitions;
+      }
+      cout << endl; 
     }
+
   }
 }
-
 
 int main(int argc, char* argv[]) {
   FILE_NAME = argv[1];
