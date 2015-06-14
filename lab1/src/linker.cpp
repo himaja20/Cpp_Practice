@@ -31,8 +31,8 @@ list<token> tokens;
 list<string> symbolsList; //def list for symbols in current module.
 vector<string> useList; // use list for symbols in current module.
 map<string,pair<int,int> > symbolTable;
-vector<string> symbols;//define list holding all the symbols in the input file
-map<int,int> module;
+vector<pair<string,int> > symbols;//define list holding all the symbols in the input file
+//map<int,int> module;
 map<string,pair<int,int> > useListSymbols;
 
 void getNextTokens() {
@@ -194,6 +194,9 @@ bool symbolCheck(){
 }
 
 void programTextRead(bool secondpass){
+ 
+  int symbolTableAddress;
+  string symbolUsed;
   int count = digitCheck("instr");
   string instructionType; 
   int address;
@@ -256,11 +259,29 @@ void programTextRead(bool secondpass){
 
       case 'E':
         //extern type
-//         int operand = address % 1000;
-         string symbolUsed = useList[instrAddr.second];
-         int symbolTableAddress = symbolTable[symbolUsed].first;
+        if (instrAddr.second >  useList.size()-1){
+          errorMessage = "Error: External address exceeds length of uselist; treated as immediate";
+          _printMemMap (instrAddr,errorMessage);
+         }
+        else
+        {
+          symbolUsed = useList[instrAddr.second];
 
-         instrAddr.second = symbolTableAddress;
+         
+         // Update the isUsed flag.
+         if (useListSymbols.count(symbolUsed) > 0 ) {
+         useListSymbols[symbolUsed].second = 1;
+         }
+
+         if(symbolTable.count(symbolUsed) == 0) {
+           errorMessage = "Error: " + symbolUsed + " is not defined; zero used";
+           instrAddr.second = 000;
+         }
+     
+         if (symbolTable.count(symbolUsed) > 0){
+           symbolTableAddress = symbolTable[symbolUsed].first;
+           instrAddr.second = symbolTableAddress;
+         }
         _printMemMap(instrAddr,errorMessage);
 
         break;
@@ -269,10 +290,10 @@ void programTextRead(bool secondpass){
     }
     //    addressValue = tokens.front().value;
     }
-  
+  }  
   moduleBaseAddress = moduleBaseAddress + count;
   moduleCount++;
-  module[moduleCount] = moduleBaseAddress;
+  //module[moduleCount] = moduleBaseAddress;
 
   for (list<string>::iterator it = symbolsList.begin(); it != symbolsList.end(); ++it){
     if(symbolTable[*it].first >  moduleBaseAddress){
@@ -284,7 +305,8 @@ void programTextRead(bool secondpass){
   symbolsList.clear();
 }
 
-void useListRead(){
+void useListRead(bool secondpass){
+
   int count = digitCheck("use");
   tokens.pop_front();
   
@@ -293,15 +315,15 @@ void useListRead(){
 
      symbolCheck();
      useList.push_back(tokens.front().value);
+    if (secondpass){
      useListSymbols[tokens.front().value] = make_pair(moduleCount + 1, 0);
-
-
+    }
      tokens.pop_front();
      count--;
   }
 }
 
-void defListRead(){
+void defListRead(bool secondpass){
 
   int count;
   int address;
@@ -315,20 +337,22 @@ void defListRead(){
     //checking symbols
     symbolCheck();
     string symbol = tokens.front().value;
-    symbolsList.push_back(symbol);
-    
-
+    //symbolsList.push_back(symbol);
 
     tokens.pop_front();
 
     //checking address
     address = addressCheck();
     tokens.pop_front();
-    if (symbolTable.count(symbol) > 0){
-      symbolTable[symbol].second = 1;
-    } else{
-      symbolTable[symbol] = make_pair(moduleBaseAddress + address,0);
-      symbols.push_back(symbol);
+    if(!secondpass){
+      if (symbolTable.count(symbol) > 0){
+        symbolTable[symbol].second = 1;
+      }
+      else{
+        symbolTable[symbol] = make_pair(moduleBaseAddress + address,0);
+        symbols.push_back(make_pair(symbol,moduleCount));
+      }
+      symbolsList.push_back(symbol);
     }
   }// end for
 }
@@ -348,15 +372,27 @@ void second_pass(){
          getNextTokens();
          cout << "Memory Map" << endl;
          while (!tokens.empty()) {
-           defListRead();
-           useListRead();
+           defListRead(true);
+           useListRead(true);
            programTextRead(true);
            useList.clear();
          }
+      //Warning messages
+      for(map<string,pair<int,int> >::iterator it = symbolTable.begin() ; it != symbolTable.end() ; ++it){
+        if(useListSymbols.count(it->first) == 0){
+          cout << "Warning: Module " << moduleCount << ": " << it->first << " was defined but never used" << endl;
+          }
       }
+      for(map<string,pair<int,int> >::iterator it = useListSymbols.begin() ; it != useListSymbols.end() ; ++it){
+        if (it->second.second == 0){
+          cout << "Warning: Module " << it->second.first << ": " << it->first << " appeared in the uselist but was not actually used" << endl;
+        }
+
+      }
+
       myReadFile.close();
 }
-
+}
 
 void first_pass(){
   string multipleDefinitions = "Error: This variable is multiple times defined; first value used";
@@ -364,17 +400,17 @@ void first_pass(){
   if(myReadFile.good() && !myReadFile.eof()){
     getNextTokens();
     while (!tokens.empty()) {
-      defListRead();
-      useListRead();
+      defListRead(false);
+      useListRead(false);
       programTextRead(false);
     }
-    vector<string>::iterator it;
+    vector<pair<string,int> >::iterator it;
     cout << "Symbol Table" << endl;
  //   cout << symbols.front() << endl;
   
     for(it=symbols.begin() ; it < symbols.end(); it++) {
-      cout << *it << "=" <<symbolTable[*it].first; 
-      if (symbolTable[*it].second == 1){
+      cout << it->first << "=" <<symbolTable[it->first].first; 
+      if (symbolTable[it->first].second == 1){
         cout <<" "<<  multipleDefinitions;
       }
       cout << endl; 
