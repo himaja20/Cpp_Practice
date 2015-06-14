@@ -28,12 +28,12 @@ typedef struct eachToken{
   int lineOffset;  
 }token;
 list<token> tokens;
-list<string> symbolsList;
-vector<string> useList;
-//map<int,int> module;
+list<string> symbolsList; //def list for symbols in current module.
+vector<string> useList; // use list for symbols in current module.
 map<string,pair<int,int> > symbolTable;
-vector<string> symbols;
+vector<string> symbols;//define list holding all the symbols in the input file
 map<int,int> module;
+map<string,pair<int,int> > useListSymbols;
 
 void getNextTokens() {
   string myLine;
@@ -68,9 +68,14 @@ void getNextTokens() {
   }
 }
 
-void _printMemMap(int address){
+void _printMemMap(pair<int,int> address, string errMsg){
   
-      cout << setw(3) << setfill('0') << memMapCounter << ": " << address << endl;
+      cout << setw(3) << setfill('0') << memMapCounter << ": " << address.first << setw(3) << setfill('0') << address.second ;
+      if (errMsg != ""){
+        cout << " " << errMsg;
+      }
+      cout << endl;
+      memMapCounter++;
 }
 
 void _parseerror(int errcode,token t) {
@@ -192,6 +197,7 @@ void programTextRead(bool secondpass){
   int count = digitCheck("instr");
   string instructionType; 
   int address;
+  pair<int,int> instrAddr;
 
   tokens.pop_front();
 
@@ -199,41 +205,67 @@ void programTextRead(bool secondpass){
     //reading instruction type
     int instrType = instructionTypeCheck();
     char instType = tokens.front().value[0];
+    string errorMessage;
     tokens.pop_front();
     
     address = addressCheck();
+    
+    // making a opcode,operand pair
+    instrAddr = make_pair(address/1000,address%1000);
+
     tokens.pop_front();
 
     if(secondpass) {
      switch (instType) {
       case 'R' :
         //relative type
-        _printMemMap(moduleBaseAddress + address);
+
+         if (instrAddr.first > 9){
+            instrAddr.first = 9;
+            instrAddr.second = 999;
+            errorMessage = "Error: Illegal opcode; treated as 9999";
+         }
+         else if (instrAddr.second > count ) {
+            errorMessage = "Error: Relative address exceeds module size; zero used";
+            instrAddr.second = moduleBaseAddress;
+         }
+         else{
+           instrAddr.second = moduleBaseAddress + instrAddr.second;
+         }
+        _printMemMap(instrAddr,errorMessage);
         break;
 
       case 'I':
         //immediate type
-        _printMemMap(address);
+        if (address> 9999){
+           errorMessage =  "Error: Illegal immediate value; treated as 9999";
+           instrAddr.first = 9;
+           instrAddr.second = 999;
+        }
+        _printMemMap(instrAddr,errorMessage);
       break;
 
       case 'A':
         //absolute type
-        _printMemMap(address);
+        if (instrAddr.second > 512){
+          errorMessage = "Error: Absolute address exceeds machine size; zero used";
+          instrAddr.second = 000;
+        }
+        _printMemMap(instrAddr,errorMessage);
         break;
 
       case 'E':
         //extern type
-         int operand = address % 1000;
-         string symbolUsed = useList[operand];
+//         int operand = address % 1000;
+         string symbolUsed = useList[instrAddr.second];
          int symbolTableAddress = symbolTable[symbolUsed].first;
 
-         address = (address / 1000)*1000 + symbolTableAddress;
-        _printMemMap(address);
+         instrAddr.second = symbolTableAddress;
+        _printMemMap(instrAddr,errorMessage);
 
         break;
 
       }
-      memMapCounter++;
     }
     //    addressValue = tokens.front().value;
     }
@@ -261,6 +293,9 @@ void useListRead(){
 
      symbolCheck();
      useList.push_back(tokens.front().value);
+     useListSymbols[tokens.front().value] = make_pair(moduleCount + 1, 0);
+
+
      tokens.pop_front();
      count--;
   }
@@ -304,7 +339,6 @@ void reset() {
   lOffset = 0;
   lastLineOffset = 0;
   lastLineNumber = 0;
-  memMapCounter = 0;
 }
 
 void second_pass(){
@@ -362,21 +396,3 @@ int main(int argc, char* argv[]) {
   second_pass();
 }
 
-// ifstream myReadFile("/home/ajr619/himmi/os/lab1/labsamples/input-1");
-/* char output[100];
-   if (myReadFile.good()) {
-   cout << "if passed"  << endl ;
-   while (!myReadFile.eof()) {
-
-
-   myReadFile >> output;
-   cout<<output;
-
-
-   }
-   }else{
-   cout << "in else" << endl;
-   }
-   myReadFile.close();
-   return 0;
-   }*/
