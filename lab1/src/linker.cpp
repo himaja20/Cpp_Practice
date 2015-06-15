@@ -29,11 +29,13 @@ typedef struct eachToken{
 }token;
 list<token> tokens;
 list<string> symbolsList; //def list for symbols in current module.
-vector<string> useList; // use list for symbols in current module.
+vector<pair<string, int> > useList; // use list for symbols in current module.
 map<string,pair<int,int> > symbolTable;
-vector<pair<string,int> > symbols;//define list holding all the symbols in the input file
+vector<string> symbols;//define list holding all the symbols in the input file
 //map<int,int> module;
 map<string,pair<int,int> > useListSymbols;
+map<string,int> symDefModuleNum;
+map<int,int> module;
 
 void getNextTokens() {
   string myLine;
@@ -107,26 +109,16 @@ token tokenExistenceCheck(int errCode){
   return t;
 }
 
-int instructionTypeCheck(){
+string instructionTypeCheck(){
 
   token t =  tokenExistenceCheck(2);
-  if ((t.value == "R")){
-    return 1;}
-  else if ((t.value == "I")){
-    return 2;
-  }
-  else if ((t.value == "A")){
-    return 3;
-  }
-  else if ((t.value == "E")){
-    return 4;
+  if ((t.value == "R") ||(t.value == "I") ||(t.value == "E") || (t.value == "A")){
+    return t.value;
   }
   else{
     _parseerror(2,t);
-    return -1 ;}
 }
-
-
+}
 int digitCheck(string listType){
 
   token t;
@@ -137,8 +129,12 @@ int digitCheck(string listType){
 
   string valToCheck = t.value;
 
-  if (isdigit(valToCheck.c_str()[0])){
-    returnVal = atoi(valToCheck.c_str());
+  char* pEnd;
+  returnVal = (int)strtol(valToCheck.c_str(),&pEnd ,10);
+
+    if((*pEnd == '\0') && (returnVal >= 0)){
+//  if (isdigit(valToCheck.c_str()[0])){
+   // returnVal = atoi(valToCheck.c_str());
 
     if (returnVal > 16){
       if (listType == "def"){
@@ -162,15 +158,15 @@ int addressCheck(){
 
   token t;
   int returnVal;
-
+  char* pEnd;
 
   t = tokenExistenceCheck(0);
   string valToCheck = t.value;
   int addrLen = strlen(valToCheck.c_str());
 
+  returnVal = (int)strtol(valToCheck.c_str(),&pEnd,10);
 
-  if (isdigit(valToCheck.c_str()[0])) {
-      returnVal = atoi(valToCheck.c_str());
+  if((*pEnd == '\0') && (returnVal >= 0)) {
       return returnVal;
   }
   else{
@@ -196,6 +192,7 @@ bool symbolCheck(){
 void programTextRead(bool secondpass){
  
   int symbolTableAddress;
+  int prevIsUsedValue = 0;
   string symbolUsed;
   int count = digitCheck("instr");
   string instructionType; 
@@ -206,8 +203,9 @@ void programTextRead(bool secondpass){
 
   for (int i=0; i<count; i++){
     //reading instruction type
-    int instrType = instructionTypeCheck();
-    char instType = tokens.front().value[0];
+    prevIsUsedValue = 0;
+    string instrType = instructionTypeCheck();
+    char instType =instrType[0];// tokens.front().value[0];
     string errorMessage;
     tokens.pop_front();
     
@@ -265,13 +263,14 @@ void programTextRead(bool secondpass){
          }
         else
         {
-          symbolUsed = useList[instrAddr.second];
+          symbolUsed = useList[instrAddr.second].first;
 
          
          // Update the isUsed flag.
          if (useListSymbols.count(symbolUsed) > 0 ) {
-         useListSymbols[symbolUsed].second = 1;
+           useListSymbols[symbolUsed].second++;
          }
+         useList[instrAddr.second].second++;
 
          if(symbolTable.count(symbolUsed) == 0) {
            errorMessage = "Error: " + symbolUsed + " is not defined; zero used";
@@ -288,19 +287,28 @@ void programTextRead(bool secondpass){
 
       }
     }
-    //    addressValue = tokens.front().value;
-    }
-  }  
-  moduleBaseAddress = moduleBaseAddress + count;
-  moduleCount++;
-  //module[moduleCount] = moduleBaseAddress;
+   }// end of second pass logic
+  } //end for 
 
-  for (list<string>::iterator it = symbolsList.begin(); it != symbolsList.end(); ++it){
-    if(symbolTable[*it].first >  moduleBaseAddress){
-      cout << "Warning: Module " << moduleCount << ": " << *it << " to big " << symbolTable[*it].first << " (max=" << moduleBaseAddress - 1 << ") assume zero relative" << endl;
-      symbolTable[*it].first = 0;
+  if(secondpass) {
+    for(vector<pair<string,int> >::iterator it = useList.begin() ; it != useList.end() ; ++it){
+  //    cout << it->second << endl;
+          if (it->second == 0){
+             cout << "Warning: Module " << moduleCount + 1<< ": " << it->first << " appeared in the uselist but was not actually used" << endl;
+          }
+    }
   }
-  }  
+
+ moduleCount++;
+  for (list<string>::iterator it = symbolsList.begin(); it != symbolsList.end(); ++it){
+    if((symbolTable[*it].first - moduleBaseAddress)> count ){
+      cout << "Warning: Module " << moduleCount << ": " << *it << " to big " << symbolTable[*it].first - moduleBaseAddress << " (max="<< count - 1 << ") assume zero relative" << endl;
+      symbolTable[*it].first = moduleBaseAddress;
+  }
+  }
+
+ moduleBaseAddress = moduleBaseAddress + count;
+ module[moduleCount] = moduleBaseAddress;
 
   symbolsList.clear();
 }
@@ -314,7 +322,7 @@ void useListRead(bool secondpass){
   while(count != 0 ) {
 
      symbolCheck();
-     useList.push_back(tokens.front().value);
+     useList.push_back(make_pair(tokens.front().value, 0));
     if (secondpass){
      useListSymbols[tokens.front().value] = make_pair(moduleCount + 1, 0);
     }
@@ -350,10 +358,12 @@ void defListRead(bool secondpass){
       }
       else{
         symbolTable[symbol] = make_pair(moduleBaseAddress + address,0);
-        symbols.push_back(make_pair(symbol,moduleCount));
+        symbols.push_back(symbol);
+        symDefModuleNum[symbol] = moduleCount + 1;
       }
-      symbolsList.push_back(symbol);
+       symbolsList.push_back(symbol);
     }
+    
   }// end for
 }
 void reset() {
@@ -378,16 +388,16 @@ void second_pass(){
            useList.clear();
          }
       //Warning messages
-      for(map<string,pair<int,int> >::iterator it = symbolTable.begin() ; it != symbolTable.end() ; ++it){
-        if(useListSymbols.count(it->first) == 0){
-          cout << "Warning: Module " << moduleCount << ": " << it->first << " was defined but never used" << endl;
+     
+      for(vector<string>::iterator it = symbols.begin() ; it != symbols.end() ; ++it){
+        if ((useListSymbols.count(*it) > 0)){
+          if (useListSymbols[*it].second == 0){
+            cout << "Warning: Module " << symDefModuleNum[*it]<< ": " << *it << " was defined but never used " << endl;
           }
-      }
-      for(map<string,pair<int,int> >::iterator it = useListSymbols.begin() ; it != useListSymbols.end() ; ++it){
-        if (it->second.second == 0){
-          cout << "Warning: Module " << it->second.first << ": " << it->first << " appeared in the uselist but was not actually used" << endl;
-        }
-
+         }
+        else{
+            cout << "Warning: Module " << symDefModuleNum[*it]<< ": " << *it << " was defined but never used " << endl;
+          }
       }
 
       myReadFile.close();
@@ -403,14 +413,16 @@ void first_pass(){
       defListRead(false);
       useListRead(false);
       programTextRead(false);
+      useList.clear();
     }
-    vector<pair<string,int> >::iterator it;
+
+    vector<string>::iterator it;
     cout << "Symbol Table" << endl;
  //   cout << symbols.front() << endl;
   
     for(it=symbols.begin() ; it < symbols.end(); it++) {
-      cout << it->first << "=" <<symbolTable[it->first].first; 
-      if (symbolTable[it->first].second == 1){
+      cout << *it << "=" <<symbolTable[*it].first; 
+      if (symbolTable[*it].second == 1){
         cout <<" "<<  multipleDefinitions;
       }
       cout << endl; 
