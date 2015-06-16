@@ -226,7 +226,7 @@ void programTextRead(bool secondpass){
             instrAddr.second = 999;
             errorMessage = "Error: Illegal opcode; treated as 9999";
          }
-         else if (instrAddr.second > count ) {
+         else if (instrAddr.second >= count ) {
             errorMessage = "Error: Relative address exceeds module size; zero used";
             instrAddr.second = moduleBaseAddress;
          }
@@ -319,12 +319,14 @@ void useListRead(bool secondpass){
   tokens.pop_front();
   
   //reading symbols
-  while(count != 0 ) {
+  while(count > 0 ) {
 
      symbolCheck();
      useList.push_back(make_pair(tokens.front().value, 0));
     if (secondpass){
-     useListSymbols[tokens.front().value] = make_pair(moduleCount + 1, 0);
+      if (!(useListSymbols.count(tokens.front().value) > 0)){
+         useListSymbols[tokens.front().value] = make_pair(moduleCount + 1, 0);
+      }
     }
      tokens.pop_front();
      count--;
