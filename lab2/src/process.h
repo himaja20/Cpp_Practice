@@ -9,6 +9,7 @@ class Process {
 
     private:
         int at,tct,mcb,mib;
+        int proc_sp;
         static int p_counter;
 
     public:
@@ -20,13 +21,14 @@ class Process {
 
         States state;
 
-        Process(int atP, int tctP, int mcbP, int mibP){
+        Process(int atP, int tctP, int mcbP, int mibP, int proc_spP){
             pid = p_counter++;
             at = atP;
             tct = tctP;
             mcb = mcbP;
             mib = mibP;
             state = CREATED;
+            proc_sp = proc_spP;
         }
 
         int get_at()
@@ -58,9 +60,10 @@ class Process {
 
         friend ostream& operator<<(ostream& os, const Process& proc){
             cout << "printing " << endl;
-            os << proc.at << " " << proc.tct << " " << proc.mcb << " " << proc.mib << endl;
+            os << proc.at << " " << proc.tct << " " << proc.mcb << " " << proc.mib << "  " << proc.proc_sp << endl;
             return os;
         }
 };
 int Process::p_counter = 0;
+
 #endif
