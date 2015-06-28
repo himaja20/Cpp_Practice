@@ -13,12 +13,15 @@ class AbstractScheduler{
            this->quantum = quantum;
         }
 
+        int get_quantum(){
+            
+            return quantum;
+        
+        }
+        
         virtual int getNewProcess() = 0;
         virtual void addProcess() = 0;
 
 
 };
 #endif
-
-
-

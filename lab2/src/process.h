@@ -10,6 +10,11 @@ class Process {
     private:
         int at,tct,mcb,mib;
         int proc_sp;
+        int remainingCPUBurst;
+        int remainingCPUTime;
+        int allowedCPUTime;
+        int lastTransitionTime;
+
         static int p_counter;
 
     public:
@@ -26,12 +31,15 @@ class Process {
             pid = p_counter++;
             at = atP;
             tct = tctP;
+            remainingCPUTime = tctP;
             mcb = mcbP;
             mib = mibP;
             state = CREATED;
             proc_sp = proc_spP;
 
-            cout << "in process" << "  " << proc_sp << endl;
+            remainingCPUBurst = 0;
+            allowedCPUTime = 0;
+            lastTransitionTime = 0;
         }
 
         int get_at()
@@ -55,6 +63,31 @@ class Process {
 
         int get_pid(){
             return pid;
+        }
+
+        int get_remainingCPUBurst(){
+            return remainingCPUBurst;
+        }
+
+        int get_remainingCPUTime(){
+            return remainingCPUTime;
+        }
+
+        int get_allowedCPUTime(){
+            return allowedCPUTime;
+        }
+
+        void set_lastTransitionTime(int tstamp){
+            lastTransitionTime = tstamp;
+        }
+
+        void set_remainingCPUBurst(int burst){
+            remainingCPUBurst = burst;
+        }
+
+        void reduceRemCPUBurst(int time){
+            remainingCPUBurst = remainingCPUBurst - time;
+            remainingCPUTime -= time;
         }
 
         States get_state(){

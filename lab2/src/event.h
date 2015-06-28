@@ -44,6 +44,10 @@ class Event{
         Process::States get_newState(){
             return newState;
         }
+
+        Process::States set_newState(Process::States state){
+            newState = state;
+        }
         
         friend ostream& operator<<(ostream& os, const Event& eve){
             cout << "printing events " << endl;

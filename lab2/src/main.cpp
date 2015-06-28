@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
-#include <vector>
+#include <map>
 #include <queue>
 #include <functional>
 #include "process.h"
@@ -17,7 +17,7 @@ class myComparison{
 
     public:
 
-        bool operator()(Event e1,Event e2){
+        bool operator()(Event* e1,Event* e2){
             /*
              * first check timestamp
              * equal
@@ -27,10 +27,10 @@ class myComparison{
              *      reutrn ets1 < ets2
              *  
              */
-            if (e1.get_Tstamp() == e2.get_Tstamp()){
-                return (e1.get_eid() > e2.get_eid());
+            if (e1->get_Tstamp() == e2->get_Tstamp()){
+                return (e1->get_eid() > e2->get_eid());
             }
-            return (e1.get_Tstamp() > e2.get_Tstamp());
+            return (e1->get_Tstamp() > e2->get_Tstamp());
         }
 };
 
@@ -45,7 +45,7 @@ AbstractScheduler* generateQuantum(char* opArg){
     }
     opArg = opArg + 1;
     quantum = strtol(opArg,&pEnd,10);
-    AbstractScheduler * as = new RRScheduler(quantum);
+    AbstractScheduler* as = new RRScheduler(quantum);
     return as;
 }
 
@@ -54,17 +54,20 @@ int main(int argc, char* argv[]){
     char* FILE_NAME;
     char* R_FILE;
     int at,tct,mcb,mib;
+    int nextCPUFreeTime;
+    int cpuBurst;
 
-    vector<Process> procObjList;
-    priority_queue<Event,vector<Event>,myComparison> eventQ;
+    map<int,Process*> procObjMap;
+    priority_queue<Event*,vector<Event*>,myComparison> eventQ;
 
     int vflag = 0;
     int sflag = 0;
     char *sValue = NULL;
     int quantum = INT_MAX;
-    int c,
+    int c;
+    AbstractScheduler* as = NULL;
 
-        opterr = 0;
+    opterr = 0;
     char *pEnd;
     while((c = getopt(argc, argv, "vs:")) != -1)
     {
@@ -78,7 +81,7 @@ int main(int argc, char* argv[]){
 
                 sflag = 1;
                 sValue = optarg;
-                generateQuantum(optarg);
+                as = generateQuantum(optarg);
                 break;
 
         }
@@ -105,41 +108,73 @@ int main(int argc, char* argv[]){
 
         int val =  rand.getPriority();
         cout << val  << endl;
-        Process newProc(at,tct,mcb,mib,val);
-        procObjList.push_back(newProc);
-        Event newEvent(newProc.get_pid(),at,Process::CREATED,Process::READY);
+        Process* newProc = new Process(at,tct,mcb,mib,val);
+        procObjMap.insert(pair<int,Process*>(newProc->get_pid(),newProc));
+        Event* newEvent = new Event(newProc->get_pid(),at,Process::CREATED,Process::READY);
         eventQ.push(newEvent);
     }
 
+    int currentTime = 0;
     while(!eventQ.empty()){
-        //        cout << eventQ.top() << endl;
 
-        event curEvent =  eventQ.pop();
+        Event* curEvent =  eventQ.top();
+        eventQ.pop();
+        currentTime = curEvent->get_Tstamp();
+        Process* curProc = procObjMap[curEvent->get_pid()];
 
-        if (curEvent.prevState == CREATED && curEvent.newState == READY){
+        if (curEvent->get_prevState() == Process::CREATED && curEvent->get_newState() == Process::READY){
             //push it to ready queue
         }
 
-        else if (curEvent.prevState == READY && curEvent.newState == RUNNING){
+        else if (curEvent->get_prevState() == Process::READY && curEvent->get_newState() == Process::RUNNING){
+            int allowedTime = curProc->get_remainingCPUBurst();
+            curEvent->set_newState(Process::BLOCKED);
+
+            if (curProc->get_remainingCPUBurst() == 0){
+                int cpBurst = rand.myrandom(curProc->get_mcb());
+                if(cpBurst > curProc->get_remainingCPUTime()){
+                    cpBurst = curProc->get_remainingCPUTime();
+                    curEvent->set_newState(Process::DONE);
+                }
+                curProc->set_remainingCPUBurst(cpBurst);
+            }
+            allowedTime = curProc->get_remainingCPUBurst();
+            if(allowedTime > as->get_quantum()){
+                allowedTime = as->get_quantum();
+                curEvent->set_newState(Process::RUNNING);
+            }
+            curProc->reduceRemCPUBurst(allowedTime);
+            
+            eventQ.push(new Event(curProc->get_pid(),(currentTime + allowedTime),Process::RUNNING,curEvent->get_newState()));
+        }
+
+        else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::BLOCKED){
+
+            //calculate ib value
+            //TotalCPUTime - TotalTimeSpentInCpu(adding times of cpu Bursrts) = remainingCPUTime
+            //
+            //
+        }
+
+        else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::READY)
+        {
+
+            //just print remainingCPUBurst (Cbr)
+            //TotalCPUTime - TotalTimeSpentInCpu(adding times of cpu Bursrts) = remainingCPUTime
 
         }
 
-        else if(curEvent.prevState == RUNNING && curEvent.newState == BLOCKED){
+        else if (curEvent->get_prevState() == Process::BLOCKED && curEvent->get_newState() == Process::READY) {
+            //just push it to ready queue
 
         }
 
-        else if(curEvent.prevState == RUNNING && curEvent.newState == READY){
+        else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::DONE){
+            //print done
 
         }
 
-        else if (curEvent.prevState == BLOCKED && curEvent.newState == READY) {
-
-        }
-
-        else if(curEvent.prevState == RUNNING && curEvent.newState == DONE){
-
-        }
-
+        curProc->set_lastTransitionTime(currentTime);
     }
 
 
