@@ -22,6 +22,7 @@ class Process {
         States state;
 
         Process(int atP, int tctP, int mcbP, int mibP, int proc_spP){
+
             pid = p_counter++;
             at = atP;
             tct = tctP;
@@ -29,6 +30,8 @@ class Process {
             mib = mibP;
             state = CREATED;
             proc_sp = proc_spP;
+
+            cout << "in process" << "  " << proc_sp << endl;
         }
 
         int get_at()

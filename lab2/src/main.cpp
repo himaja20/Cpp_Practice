@@ -7,6 +7,9 @@
 #include "process.h"
 #include "event.h"
 #include "randomUtil.h"
+#include <limits.h>
+#include "AbstractScheduler.h"
+#include "RRScheduler.h"
 
 using namespace std;
 
@@ -31,24 +34,37 @@ class myComparison{
         }
 };
 
+AbstractScheduler* generateQuantum(char* opArg){
 
+    char* pEnd;
+    int quantum;
+    if (opArg[0] != 'R')
+    { 
+        cout << "invalid argument" << endl;
+        exit(0);
+    }
+    opArg = opArg + 1;
+    quantum = strtol(opArg,&pEnd,10);
+    AbstractScheduler * as = new RRScheduler(quantum);
+    return as;
+}
 
 int main(int argc, char* argv[]){
 
     char* FILE_NAME;
     char* R_FILE;
     int at,tct,mcb,mib;
-    
+
     vector<Process> procObjList;
     priority_queue<Event,vector<Event>,myComparison> eventQ;
 
     int vflag = 0;
     int sflag = 0;
     char *sValue = NULL;
-    int quantum;
+    int quantum = INT_MAX;
     int c,
 
-    opterr = 0;
+        opterr = 0;
     char *pEnd;
     while((c = getopt(argc, argv, "vs:")) != -1)
     {
@@ -62,23 +78,16 @@ int main(int argc, char* argv[]){
 
                 sflag = 1;
                 sValue = optarg;
-                if (sValue[0] != 'R')
-                { 
-                    cout << "invalid argument" << endl;
-                    exit(0);
-                }
-                sValue = sValue + 1;
-                quantum = strtol(sValue,&pEnd,10);
-                cout << quantum << "quantum" << endl;
+                generateQuantum(optarg);
                 break;
 
         }
     }
     FILE_NAME = argv[optind];
-    R_FILE = argv[optind++];
+    R_FILE = argv[optind + 1];
 
     ifstream fin(FILE_NAME, ios::in | ios::binary);
-    randomUtil *rand = new randomUtil(R_FILE);
+    RandomUtil rand(R_FILE);
 
     if ((R_FILE == "") || (FILE_NAME == "")) {
         cout << "Input file paths empty";
@@ -93,16 +102,44 @@ int main(int argc, char* argv[]){
 
 
     while(fin >> at >> tct >> mcb >> mib){
-        cout << "inside while" << endl;
-        Process newProc(at,tct,mcb,mib,0);
+
+        int val =  rand.getPriority();
+        cout << val  << endl;
+        Process newProc(at,tct,mcb,mib,val);
         procObjList.push_back(newProc);
         Event newEvent(newProc.get_pid(),at,Process::CREATED,Process::READY);
         eventQ.push(newEvent);
     }
 
     while(!eventQ.empty()){
-        cout << eventQ.top() << endl;
-        eventQ.pop();
+        //        cout << eventQ.top() << endl;
+
+        event curEvent =  eventQ.pop();
+
+        if (curEvent.prevState == CREATED && curEvent.newState == READY){
+            //push it to ready queue
+        }
+
+        else if (curEvent.prevState == READY && curEvent.newState == RUNNING){
+
+        }
+
+        else if(curEvent.prevState == RUNNING && curEvent.newState == BLOCKED){
+
+        }
+
+        else if(curEvent.prevState == RUNNING && curEvent.newState == READY){
+
+        }
+
+        else if (curEvent.prevState == BLOCKED && curEvent.newState == READY) {
+
+        }
+
+        else if(curEvent.prevState == RUNNING && curEvent.newState == DONE){
+
+        }
+
     }
 
 

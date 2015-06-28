@@ -5,7 +5,7 @@
 #include <fstream>
 
 
-class randomUtil{
+class RandomUtil{
 
     private:
         int *ranvals;
@@ -15,9 +15,9 @@ class randomUtil{
     public:
 
 
-        randomUtil(char* rFile){
-            ifstream rfin(rFile,ios::in|ios::binary);
-            int tmp, i = 0;
+        RandomUtil(char* rFile){
+            ifstream rfin(rFile,ios::in);
+            long tmp, i = 0;
             if (!rfin.is_open())
             {
                 cout << "Random File open failed" << endl;
@@ -30,7 +30,7 @@ class randomUtil{
             }
 
             while(rfin >> tmp){
-                ranvals = tmp;//segmentation field
+               ranvals[i] = tmp;//segmentation field
                 i++;
             }
 
@@ -49,9 +49,9 @@ class randomUtil{
             if (offset == ranvalsSize - 1){
                 offset = set_ofs();
             }
-
             returnVal =  1 + (ranvals[offset] % burst);
             offset++;
+            
             return returnVal;
         }
 
