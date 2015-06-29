@@ -10,6 +10,7 @@
 #include <limits.h>
 #include "AbstractScheduler.h"
 #include "RRScheduler.h"
+#include "FIFO.h"
 
 using namespace std;
 
@@ -37,16 +38,20 @@ class myComparison{
 AbstractScheduler* generateQuantum(char* opArg){
 
     char* pEnd;
-    int quantum;
-    if (opArg[0] != 'R')
-    { 
-        cout << "invalid argument" << endl;
-        exit(0);
+    int quantum = INT_MAX;
+    char c = opArg[0];
+    AbstractScheduler* ass;
+    switch(c){
+        case 'R':
+            opArg = opArg + 1;
+            quantum = strtol(opArg,&pEnd,10);
+            ass = new RRScheduler(quantum);
+            break;
+        case 'F':
+            ass = new FIFO(quantum);
+            break;
     }
-    opArg = opArg + 1;
-    quantum = strtol(opArg,&pEnd,10);
-    AbstractScheduler* as = new RRScheduler(quantum);
-    return as;
+    return ass;
 }
 
 int main(int argc, char* argv[]){
@@ -63,9 +68,8 @@ int main(int argc, char* argv[]){
     int vflag = 0;
     int sflag = 0;
     char *sValue = NULL;
-    int quantum = INT_MAX;
     int c;
-    AbstractScheduler* as = NULL;
+    AbstractScheduler* ass = NULL;
 
     opterr = 0;
     char *pEnd;
@@ -81,7 +85,7 @@ int main(int argc, char* argv[]){
 
                 sflag = 1;
                 sValue = optarg;
-                as = generateQuantum(optarg);
+                ass = generateQuantum(optarg);
                 break;
 
         }
@@ -130,7 +134,7 @@ int main(int argc, char* argv[]){
             timeInPrevState = currentTime - curProc->get_lastTransitionTime();
 
             if (curEvent->get_prevState() == Process::CREATED && curEvent->get_newState() == Process::READY){
-                as->addProcess(curProc);           
+                ass->addProcess(curProc);           
                 cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "CREATED" << " " << "->" << " "
                     << "READY" << endl;
             }
@@ -153,8 +157,8 @@ int main(int argc, char* argv[]){
                 cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "READY" << " " << "->" << " "
                     << "RUNNG" << " cb=" << curProc->get_remainingCPUBurst() << " rem=" << curProc->get_remainingCPUTime() << " prio=" << curProc->get_dp() <<  endl;
                 allowedTime = curProc->get_remainingCPUBurst();
-                if(allowedTime > as->get_quantum()){
-                    allowedTime = as->get_quantum();
+                if(allowedTime > ass->get_quantum()){
+                    allowedTime = ass->get_quantum();
                     finalState = Process::READY;
                 }
                 curProc->reduceRemCPUBurst(allowedTime);
@@ -186,7 +190,7 @@ int main(int argc, char* argv[]){
                     << "READY" << "  cb=" << curProc->get_remainingCPUBurst() << " rem=" << curProc->get_remainingCPUTime() 
                     << " prio=" << curProc->get_dp() << endl;
 
-                as->addProcess(curProc);
+                ass->addProcess(curProc);
                 curProc->set_state(Process::READY);
                 //just print remainingCPUBurst (Cbr)
 
@@ -196,7 +200,7 @@ int main(int argc, char* argv[]){
             else if (curEvent->get_prevState() == Process::BLOCKED && curEvent->get_newState() == Process::READY) {
                 cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "BLOCK" << " " << "->" << " "
                     << "READY" << endl;
-                as->addProcess(curProc);
+                ass->addProcess(curProc);
                 curProc->set_state(Process::READY);
                 //just push it to ready queue
 
@@ -211,7 +215,7 @@ int main(int argc, char* argv[]){
         }
 
         if(currentTime >= nextCPUFreeTime) {
-            Process* newProcess = as->getNewProcess();
+            Process* newProcess = ass->getNewProcess();
             if (newProcess != NULL) {
                 eventQ.push(new Event(newProcess->get_pid(),currentTime,Process::READY,Process::RUNNING));
             }
