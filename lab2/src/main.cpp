@@ -107,7 +107,7 @@ int main(int argc, char* argv[]){
     while(fin >> at >> tct >> mcb >> mib){
 
         int val =  rand.getPriority();
-        cout << val  << endl;
+        //cout << val  << endl;
         Process* newProc = new Process(at,tct,mcb,mib,val);
         procObjMap.insert(pair<int,Process*>(newProc->get_pid(),newProc));
         Event* newEvent = new Event(newProc->get_pid(),at,Process::CREATED,Process::READY);
@@ -118,26 +118,24 @@ int main(int argc, char* argv[]){
     nextCPUFreeTime = currentTime;
     Process::States finalState;
     int timeInPrevState;
-    timeInPrevState = currentTime - curProc->get_lastTransitionTime();
-    while(!eventQ.empty()){
+    while(eventQ.size() > 0){
 
         Event* curEvent =  eventQ.top();
         currentTime = curEvent->get_Tstamp();
 
-        while((eventQ.top())->get_Tstamp()== currentTime){
+        while(eventQ.size() > 0 && (eventQ.top())->get_Tstamp()== currentTime){
             curEvent = eventQ.top();
             eventQ.pop();
-            
+            Process* curProc = procObjMap[curEvent->get_pid()];
+            timeInPrevState = currentTime - curProc->get_lastTransitionTime();
+
             if (curEvent->get_prevState() == Process::CREATED && curEvent->get_newState() == Process::READY){
-                Process* curProc = procObjMap[curEvent->get_pid()];
                 as->addProcess(curProc);           
-                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<":"<< "CREATED" << " " << "->"
+                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "CREATED" << " " << "->" << " "
                     << "READY" << endl;
             }
 
-          else if (curEvent->get_prevState() == Process::READY && curEvent->get_newState() == Process::RUNNING){
-                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<":"<< "READY" << " " << "->"
-                    << "RUNNG" << endl;
+            else if (curEvent->get_prevState() == Process::READY && curEvent->get_newState() == Process::RUNNING){
 
                 curProc->set_state(Process::RUNNING);
 
@@ -146,12 +144,14 @@ int main(int argc, char* argv[]){
 
                 if (curProc->get_remainingCPUBurst() == 0){
                     int cpBurst = rand.myrandom(curProc->get_mcb());
-                    if(cpBurst > curProc->get_remainingCPUTime()){
-                        cpBurst = curProc->get_remainingCPUTime();
-                        finalState = Process::DONE;
-                    }
                     curProc->set_remainingCPUBurst(cpBurst);
                 }
+                if(curProc->get_remainingCPUBurst() >= curProc->get_remainingCPUTime()){
+                    curProc->set_remainingCPUBurst(curProc->get_remainingCPUTime());
+                    finalState = Process::DONE;
+                }
+                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "READY" << " " << "->" << " "
+                    << "RUNNG" << " cb=" << curProc->get_remainingCPUBurst() << " rem=" << curProc->get_remainingCPUTime() << " prio=" << curProc->get_dp() <<  endl;
                 allowedTime = curProc->get_remainingCPUBurst();
                 if(allowedTime > as->get_quantum()){
                     allowedTime = as->get_quantum();
@@ -163,65 +163,67 @@ int main(int argc, char* argv[]){
                 eventQ.push(new Event(curProc->get_pid(),(currentTime + allowedTime),Process::RUNNING,finalState));
 
             }
-        
 
-        else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::BLOCKED){
 
-            curProc->set_state(Process::BLOCKED);
-            int calculatedIb = rand.myrandom(curProc->get_mib());
-            finalState = Process::READY;
-            eventQ.push(new Event(curProc->get_pid(),(currentTime + calculatedIb),curEvent->get_newState(),finalState));
+            else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::BLOCKED){
 
-            cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<":"<< "RUNNG" << " " << "->"
-                << "BLOCK" << endl;
+                curProc->set_state(Process::BLOCKED);
+                int calculatedIb = rand.myrandom(curProc->get_mib());
+                finalState = Process::READY;
+                eventQ.push(new Event(curProc->get_pid(),(currentTime + calculatedIb),curEvent->get_newState(),finalState));
 
-            //calculate ib value
-            //add an event for Blocked-Ready, Tstamp = currentTime + calculated Ib
-            //
+                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "RUNNG" << " " << "->" << " "
+                    << "BLOCK" << "  ib=" << calculatedIb << " rem=" << curProc->get_remainingCPUTime() << endl;
+
+                //calculate ib value
+                //add an event for Blocked-Ready, Tstamp = currentTime + calculated Ib
+                //
+            }
+
+            else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::READY)
+            {
+                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "RUNNG" << " " << "->" << " "
+                    << "READY" << "  cb=" << curProc->get_remainingCPUBurst() << " rem=" << curProc->get_remainingCPUTime() 
+                    << " prio=" << curProc->get_dp() << endl;
+
+                as->addProcess(curProc);
+                curProc->set_state(Process::READY);
+                //just print remainingCPUBurst (Cbr)
+
+                //remainingCPUTime
+            }
+
+            else if (curEvent->get_prevState() == Process::BLOCKED && curEvent->get_newState() == Process::READY) {
+                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "BLOCK" << " " << "->" << " "
+                    << "READY" << endl;
+                as->addProcess(curProc);
+                curProc->set_state(Process::READY);
+                //just push it to ready queue
+
+            }
+
+            else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::DONE){
+                //print done
+                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "Done" << endl;
+                curProc->set_state(Process::DONE);
+            }
+            curProc->set_lastTransitionTime(currentTime);
         }
 
-        else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::READY)
-        {
-            cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<":"<< "RUNNG" << " " << "->"
-                << "READY" << endl;
-
-            as->addProcess(curProc);
-            curProc->set_state(Process::READY);
-            //just print remainingCPUBurst (Cbr)
-
-            //remainingCPUTime
+        if(currentTime >= nextCPUFreeTime) {
+            Process* newProcess = as->getNewProcess();
+            if (newProcess != NULL) {
+                eventQ.push(new Event(newProcess->get_pid(),currentTime,Process::READY,Process::RUNNING));
+            }
         }
 
-        else if (curEvent->get_prevState() == Process::BLOCKED && curEvent->get_newState() == Process::READY) {
-            cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<":"<< "BLOCK" << " " << "->"
-                << "READY" << endl;
-            as->addProcess(curProc);
-            curProc->set_state(Process::READY);
-            //just push it to ready queue
-
-        }
-
-        else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::DONE){
-            //print done
-            cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<":"<< "RUNNG" << " " << "->"
-                << "DONE" << endl;
-            curProc->set_state(Process::DONE);
-        }
-        curProc->set_lastTransitionTime(currentTime);
     }
-    
-    if(currentTime >= nextCPUFreeTime) {
-        curProc = as->getNewProcess();
-        eventQ.push(new Event(curProc->get_pid(),currentTime,Process::READY,Process::RUNNING));
-    }
-
-}
 
 
-/*    for(vector<Process>::iterator it = procObjList.begin(); it!=procObjList.end(); it++)
-      {
-//cout << procObjMap[it->second.get_pid()] << endl;
-cout << "iterating " << *it << endl;
-} */
+    /*    for(vector<Process>::iterator it = procObjList.begin(); it!=procObjList.end(); it++)
+          {
+    //cout << procObjMap[it->second.get_pid()] << endl;
+    cout << "iterating " << *it << endl;
+    } */
 
 }

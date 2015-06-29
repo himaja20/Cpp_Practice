@@ -9,11 +9,12 @@ class Process {
 
     private:
         int at,tct,mcb,mib;
-        int proc_sp;
+        int proc_sp;//static priority
         int remainingCPUBurst;
         int remainingCPUTime;
         int allowedCPUTime;
         int lastTransitionTime;
+        int proc_dp; //dynamic priority
 
         static int p_counter;
 
@@ -36,10 +37,11 @@ class Process {
             mib = mibP;
             state = CREATED;
             proc_sp = proc_spP;
+            proc_dp = proc_sp - 1;
 
             remainingCPUBurst = 0;
             allowedCPUTime = 0;
-            lastTransitionTime = 0;
+            lastTransitionTime = atP;
         }
 
         int get_at()
@@ -93,6 +95,15 @@ class Process {
             remainingCPUBurst = remainingCPUBurst - time;
             remainingCPUTime -= time;
         }
+
+        int get_sp(){
+            return proc_sp;
+        }
+
+        int get_dp(){
+            return proc_dp;
+        }
+
 
         States get_state(){
             return state;

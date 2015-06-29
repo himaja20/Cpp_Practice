@@ -13,14 +13,18 @@ class RRScheduler: public AbstractScheduler {
         RRScheduler(int quantum) : AbstractScheduler(quantum) {}
 
         Process* getNewProcess(){
+            if (readyQ.size() == 0) {
+                return NULL;
+            }
             Process* myProc =  readyQ.front(); 
             readyQ.pop();
             return myProc;
-
         }
 
         void addProcess(Process* proc){
-            readyQ.push(proc);
+            if(proc != NULL){
+                readyQ.push(proc);
+            }
 
         }
 
