@@ -11,6 +11,8 @@
 #include "AbstractScheduler.h"
 #include "RRScheduler.h"
 #include "FIFO.h"
+#include "LCFS.h"
+
 
 using namespace std;
 
@@ -32,6 +34,7 @@ class myComparison{
                 return (e1->get_eid() > e2->get_eid());
             }
             return (e1->get_Tstamp() > e2->get_Tstamp());
+    
         }
 };
 
@@ -49,6 +52,9 @@ AbstractScheduler* generateQuantum(char* opArg){
             break;
         case 'F':
             ass = new FIFO(quantum);
+            break;
+        case 'L' :
+            ass = new LCFS(quantum);
             break;
     }
     return ass;
