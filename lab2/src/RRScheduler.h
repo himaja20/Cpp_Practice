@@ -4,15 +4,24 @@
 
 class RRScheduler: public AbstractScheduler {
 
+    private:
+
+        queue<Process*> readyQ;
+
     public:
 
         RRScheduler(int quantum) : AbstractScheduler(quantum) {}
 
-        int getNewProcess(){
-            return 1;
+        Process* getNewProcess(){
+            Process* myProc =  readyQ.front(); 
+            readyQ.pop();
+            return myProc;
+
         }
 
-        void addProcess(){
+        void addProcess(Process* proc){
+            readyQ.push(proc);
+
         }
 
 };

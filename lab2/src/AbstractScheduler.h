@@ -19,8 +19,8 @@ class AbstractScheduler{
         
         }
         
-        virtual int getNewProcess() = 0;
-        virtual void addProcess() = 0;
+        virtual Process* getNewProcess() = 0;
+        virtual void addProcess(Process* proc) = 0;
 
 
 };

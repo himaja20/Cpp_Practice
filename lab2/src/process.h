@@ -65,6 +65,10 @@ class Process {
             return pid;
         }
 
+        int get_lastTransitionTime(){
+            return lastTransitionTime;
+        }
+
         int get_remainingCPUBurst(){
             return remainingCPUBurst;
         }
@@ -94,6 +98,10 @@ class Process {
             return state;
         }
 
+        States set_state(Process::States state)
+        {
+         this->state = state;
+         }
         friend ostream& operator<<(ostream& os, const Process& proc){
             cout << "printing " << endl;
             os << proc.at << " " << proc.tct << " " << proc.mcb << " " << proc.mib << "  " << proc.proc_sp << endl;
