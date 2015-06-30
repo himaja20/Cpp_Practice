@@ -24,6 +24,7 @@ class RRScheduler: public AbstractScheduler {
         void addProcess(Process* proc){
             if(proc != NULL){
                 readyQ.push(proc);
+                proc->reset_dp();
             }
 
         }

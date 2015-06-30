@@ -25,6 +25,7 @@ class LCFS: public AbstractScheduler {
         void addProcess(Process* proc){
             if(proc != NULL){
                 readyQ.push(proc);
+                proc->reset_dp();
             }
         }
         string get_schedulerName(){

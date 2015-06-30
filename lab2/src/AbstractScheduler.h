@@ -4,7 +4,6 @@
 class AbstractScheduler{
 
     protected:
-
         int quantum;
 
     public:

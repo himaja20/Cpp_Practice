@@ -17,6 +17,7 @@ class Process {
         int proc_dp; //dynamic priority
         int totalIOTime;
         int totalCpuWaitTime;
+        int lastEventId;
         static int p_counter;
 
 
@@ -45,6 +46,7 @@ class Process {
             allowedCPUTime = 0;
             lastTransitionTime = atP;
             totalCpuWaitTime = 0;
+            lastEventId = 0;
         }
 
         int get_at()
@@ -104,6 +106,13 @@ class Process {
 
         }
 
+        void setLastEventId(int eid){
+            lastEventId = eid;
+        }
+
+        int getLastEventId(){
+            return lastEventId;
+        }
         int get_totalIOTime(){
 
             return totalIOTime;
@@ -116,13 +125,21 @@ class Process {
             return proc_dp;
         }
 
+        void decrement_dp(){
+            proc_dp = proc_dp - 1;
+        }
+
+        void reset_dp(){
+            proc_dp = proc_sp -1;
+        }
+
         int get_totalCpuWaitTime(){
             return totalCpuWaitTime;
         }
 
         void set_totalCpuWaitTime(int currentTime, int lastTransitionTime){
             totalCpuWaitTime = totalCpuWaitTime + (currentTime - lastTransitionTime);
-      
+
         }
 
         States get_state(){
@@ -131,8 +148,8 @@ class Process {
 
         States set_state(Process::States state)
         {
-         this->state = state;
-         }
+            this->state = state;
+        }
         friend ostream& operator<<(ostream& os, const Process& proc){
             cout << "printing " << endl;
             os << proc.at << " " << proc.tct << " " << proc.mcb << " " << proc.mib << "  " << proc.proc_sp << endl;

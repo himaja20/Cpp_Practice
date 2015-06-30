@@ -13,6 +13,7 @@
 #include "FIFO.h"
 #include "LCFS.h"
 #include "SJF.h"
+#include "Prio.h"
 #include <iomanip>
 #include <stdio.h>
 
@@ -61,6 +62,12 @@ AbstractScheduler* generateQuantum(char* opArg){
         case 'S' :
             ass = new SJF(quantum);
             break;
+        case 'P' :
+            opArg = opArg + 1;
+            quantum = strtol(opArg,&pEnd,10);
+            ass = new Prio(quantum);
+            break;
+
     }
     return ass;
 }
@@ -73,12 +80,15 @@ int main(int argc, char* argv[]){
     int at,tct,mcb,mib;
     int nextCPUFreeTime;
     int cpuBurst;
+    int ioInProgress = 0;
+    double totalIOTime_noOverlap = 0;
+    int iobStart;
+
 
     map<int,Process*> procObjMap;
     priority_queue<Event*,vector<Event*>,myComparison> eventQ;
 
-    int vflag = 0;
-    int sflag = 0;
+    bool vflag = false;
     char *sValue = NULL;
     int c;
     AbstractScheduler* ass = NULL;
@@ -97,12 +107,12 @@ int main(int argc, char* argv[]){
         switch(c)
         {
             case 'v':
-                vflag = 1;
+                vflag = true;
                 break;
 
             case 's':
 
-                sflag = 1;
+                //sflag = 1;
                 sValue = optarg;
                 ass = generateQuantum(optarg);
                 break;
@@ -150,18 +160,21 @@ int main(int argc, char* argv[]){
             curEvent = eventQ.top();
             eventQ.pop();
             Process* curProc = procObjMap[curEvent->get_pid()];
+            curProc->setLastEventId(curEvent->get_eid());
             timeInPrevState = currentTime - curProc->get_lastTransitionTime();
 
             if (curEvent->get_prevState() == Process::CREATED && curEvent->get_newState() == Process::READY){
                 ass->addProcess(curProc);           
-                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "CREATED" << " " << "->" << " "
-                    << "READY" << endl;
+                if (vflag){
+                    cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "CREATED" << " " << "->" << " "
+                        << "READY" << endl;}
             }
 
             else if (curEvent->get_prevState() == Process::READY && curEvent->get_newState() == Process::RUNNING){
 
                 curProc->set_state(Process::RUNNING);
                 curProc->set_totalCpuWaitTime(currentTime,curProc->get_lastTransitionTime());
+                curProc->decrement_dp();
 
                 int allowedTime = curProc->get_remainingCPUBurst();
                 finalState = Process::BLOCKED;
@@ -174,8 +187,10 @@ int main(int argc, char* argv[]){
                     curProc->set_remainingCPUBurst(curProc->get_remainingCPUTime());
                     finalState = Process::DONE;
                 }
-                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "READY" << " " << "->" << " "
-                    << "RUNNG" << " cb=" << curProc->get_remainingCPUBurst() << " rem=" << curProc->get_remainingCPUTime() << " prio=" << curProc->get_dp() <<  endl;
+                if(vflag){
+                    cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "READY" << " " << "->" << " "
+                        << "RUNNG" << " cb=" << curProc->get_remainingCPUBurst() << " rem=" << curProc->get_remainingCPUTime() << " prio=" << curProc->get_dp()+1 <<  endl;
+                }
                 allowedTime = curProc->get_remainingCPUBurst();
                 if(allowedTime > ass->get_quantum()){
                     allowedTime = ass->get_quantum();
@@ -192,13 +207,20 @@ int main(int argc, char* argv[]){
             else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::BLOCKED){
 
                 curProc->set_state(Process::BLOCKED);
+                curProc->reset_dp();
+                ioInProgress++;
+
                 int calculatedIb = rand.myrandom(curProc->get_mib());
                 finalState = Process::READY;
                 curProc->set_totalIOTime(calculatedIb);
+                if(ioInProgress == 1){
+                    iobStart = currentTime;
+                }
                 eventQ.push(new Event(curProc->get_pid(),(currentTime + calculatedIb),curEvent->get_newState(),finalState));
 
+                if (vflag){
                 cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "RUNNG" << " " << "->" << " "
-                    << "BLOCK" << "  ib=" << calculatedIb << " rem=" << curProc->get_remainingCPUTime() << endl;
+                    << "BLOCK" << "  ib=" << calculatedIb << " rem=" << curProc->get_remainingCPUTime() << endl;}
 
                 //calculate ib value
                 //add an event for Blocked-Ready, Tstamp = currentTime + calculated Ib
@@ -207,21 +229,28 @@ int main(int argc, char* argv[]){
 
             else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::READY)
             {
-                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "RUNNG" << " " << "->" << " "
+               if (vflag){
+               cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "RUNNG" << " " << "->" << " "
                     << "READY" << "  cb=" << curProc->get_remainingCPUBurst() << " rem=" << curProc->get_remainingCPUTime() 
-                    << " prio=" << curProc->get_dp() << endl;
+                    << " prio=" << curProc->get_dp()+1 << endl;}
 
                 ass->addProcess(curProc);
                 curProc->set_state(Process::READY);
-                
+
                 //just print remainingCPUBurst (Cbr)
 
                 //remainingCPUTime
             }
 
             else if (curEvent->get_prevState() == Process::BLOCKED && curEvent->get_newState() == Process::READY) {
+
+                ioInProgress--;
+                if(ioInProgress == 0){
+                    totalIOTime_noOverlap += currentTime - iobStart;
+                }
+                if(vflag){
                 cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "BLOCK" << " " << "->" << " "
-                    << "READY" << endl;
+                    << "READY" << endl;}
                 ass->addProcess(curProc);
                 curProc->set_state(Process::READY);
                 //just push it to ready queue
@@ -230,7 +259,8 @@ int main(int argc, char* argv[]){
 
             else if(curEvent->get_prevState() == Process::RUNNING && curEvent->get_newState() == Process::DONE){
                 //print done
-                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "Done" << endl;
+                if (vflag){
+                cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "Done" << endl;}
                 curProc->set_state(Process::DONE);
             }
             curProc->set_lastTransitionTime(currentTime);
@@ -253,32 +283,32 @@ int main(int argc, char* argv[]){
         Process* prc = procObjMap[it->first];
         FinishTime = prc->get_lastTransitionTime();
         TurnaroundTime = FinishTime - prc->get_at();
-       
+
         cout << setw(4) << setfill('0') << prc->get_pid() << ":" << setw(5) << setfill(' ') << prc->get_at() <<  setw(5) << setfill(' ') << prc->get_tct()<< setw(5) << setfill(' ') << prc->get_mcb() << setw(5) << setfill(' ') << prc->get_mib() << setw(2) << setfill(' ') << prc->get_sp() << " |" ;
 
         cout << setw(6) << setfill(' ') << FinishTime << setw(6) << setfill(' ') << TurnaroundTime << setw(6) << setfill(' ') << prc->get_totalIOTime() << setw(6) <<setfill(' ') << prc->get_totalCpuWaitTime() << endl;
-    
+
         CpuUtilization = CpuUtilization + prc->get_tct();
         IoUtilization = IoUtilization + prc->get_totalIOTime();
         AvgTurnAround = AvgTurnAround + TurnaroundTime;
         AvgCpuWait = AvgCpuWait + prc->get_totalCpuWaitTime();
     }     
-   
+
     double procMapSize = (double)procObjMap.size();
     CpuUtilization = (CpuUtilization/currentTime)*100;
-    IoUtilization = (IoUtilization/currentTime)*100;
+    IoUtilization = (totalIOTime_noOverlap/currentTime)*100;
     AvgTurnAround = AvgTurnAround/procMapSize;
     AvgCpuWait = AvgCpuWait/procMapSize;
     throughPut = (procMapSize/currentTime)*100;
     printf("SUM: %d %.2lf %.2lf %.2lf %.2lf %.3lf\n",
-          currentTime,
-          CpuUtilization,
-          IoUtilization,
-          AvgTurnAround,
-          AvgCpuWait,         
-          throughPut);
+            currentTime,
+            CpuUtilization,
+            IoUtilization,
+            AvgTurnAround,
+            AvgCpuWait,         
+            throughPut);
 
-//cout << "SUM:" << " " << currentTime << " " << CpuUtilization << " " << IoUtilization << " " << AvgTurnAround << " " << AvgCpuWait << endl;
+    //cout << "SUM:" << " " << currentTime << " " << CpuUtilization << " " << IoUtilization << " " << AvgTurnAround << " " << AvgCpuWait << endl;
 }
 
 

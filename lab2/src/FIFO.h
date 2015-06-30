@@ -24,6 +24,7 @@ class FIFO: public AbstractScheduler {
         void addProcess(Process* proc){
             if(proc != NULL){
                 readyQ.push(proc);
+                proc->reset_dp();
             }
 
         }
@@ -31,7 +32,6 @@ class FIFO: public AbstractScheduler {
         string get_schedulerName(){
             return "FCFS";
             }
-
 
 };
 
