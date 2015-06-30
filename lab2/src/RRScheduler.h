@@ -1,6 +1,6 @@
 
 #include "AbstractScheduler.h"
-
+#include <sstream>
 
 class RRScheduler: public AbstractScheduler {
 
@@ -26,6 +26,18 @@ class RRScheduler: public AbstractScheduler {
                 readyQ.push(proc);
             }
 
+        }
+
+        string get_schedulerName(){
+           
+           string name;
+           std::ostringstream oss;
+           
+           name = "RR " ;
+           oss << name << quantum;
+            
+            name = oss.str();
+            return name;
         }
 
 };

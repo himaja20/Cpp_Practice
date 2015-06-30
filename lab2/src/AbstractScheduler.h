@@ -3,7 +3,7 @@
 
 class AbstractScheduler{
 
-    private:
+    protected:
 
         int quantum;
 
@@ -21,6 +21,7 @@ class AbstractScheduler{
         
         virtual Process* getNewProcess() = 0;
         virtual void addProcess(Process* proc) = 0;
+        virtual string get_schedulerName() = 0;
 
 
 };

@@ -20,7 +20,7 @@ class myComp{
                 return (p1->get_pid() > p2->get_pid());
             }
             return (p1->get_remainingCPUTime() > p2->get_remainingCPUTime());
-    
+
         }
 };
 
@@ -28,7 +28,7 @@ class myComp{
 class SJF: public AbstractScheduler {
 
     private:
-        
+
         priority_queue<Process*,vector<Process*>,myComp> readyQ;
 
     public:
@@ -49,6 +49,10 @@ class SJF: public AbstractScheduler {
                 readyQ.push(proc);
             }
 
+        }
+
+        string get_schedulerName(){
+            return "SJF";
         }
 
 };

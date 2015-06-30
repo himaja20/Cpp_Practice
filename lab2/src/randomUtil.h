@@ -47,21 +47,12 @@ class RandomUtil{
         {
             int returnVal;
             if (offset == ranvalsSize - 1){
-                offset = set_ofs();
+                offset = 0;
             }
             returnVal =  1 + (ranvals[offset] % burst);
             offset++;
             
             return returnVal;
         }
-
-        int set_ofs(){
-            offset = 0;
-            return offset;
-        }
-
-
-
-
 };
 #endif

@@ -26,9 +26,14 @@ class LCFS: public AbstractScheduler {
             if(proc != NULL){
                 readyQ.push(proc);
             }
-
+        }
+        string get_schedulerName(){
+            return "LCFS";
         }
 
-};
+
+} ;
+
+
 
 

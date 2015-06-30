@@ -15,8 +15,10 @@ class Process {
         int allowedCPUTime;
         int lastTransitionTime;
         int proc_dp; //dynamic priority
-
+        int totalIOTime;
+        int totalCpuWaitTime;
         static int p_counter;
+
 
     public:
 
@@ -38,10 +40,11 @@ class Process {
             state = CREATED;
             proc_sp = proc_spP;
             proc_dp = proc_sp - 1;
-
+            totalIOTime = 0;
             remainingCPUBurst = 0;
             allowedCPUTime = 0;
             lastTransitionTime = atP;
+            totalCpuWaitTime = 0;
         }
 
         int get_at()
@@ -96,6 +99,15 @@ class Process {
             remainingCPUTime -= time;
         }
 
+        void set_totalIOTime(int ib_calc){
+            totalIOTime = totalIOTime + ib_calc;
+
+        }
+
+        int get_totalIOTime(){
+
+            return totalIOTime;
+        }
         int get_sp(){
             return proc_sp;
         }
@@ -104,6 +116,14 @@ class Process {
             return proc_dp;
         }
 
+        int get_totalCpuWaitTime(){
+            return totalCpuWaitTime;
+        }
+
+        void set_totalCpuWaitTime(int currentTime, int lastTransitionTime){
+            totalCpuWaitTime = totalCpuWaitTime + (currentTime - lastTransitionTime);
+      
+        }
 
         States get_state(){
             return state;

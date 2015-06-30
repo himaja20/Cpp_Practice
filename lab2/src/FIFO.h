@@ -28,6 +28,11 @@ class FIFO: public AbstractScheduler {
 
         }
 
+        string get_schedulerName(){
+            return "FCFS";
+            }
+
+
 };
 
 

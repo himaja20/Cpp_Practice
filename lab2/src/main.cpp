@@ -13,8 +13,8 @@
 #include "FIFO.h"
 #include "LCFS.h"
 #include "SJF.h"
-
-
+#include <iomanip>
+#include <stdio.h>
 
 using namespace std;
 
@@ -36,7 +36,7 @@ class myComparison{
                 return (e1->get_eid() > e2->get_eid());
             }
             return (e1->get_Tstamp() > e2->get_Tstamp());
-    
+
         }
 };
 
@@ -65,6 +65,7 @@ AbstractScheduler* generateQuantum(char* opArg){
     return ass;
 }
 
+
 int main(int argc, char* argv[]){
 
     char* FILE_NAME;
@@ -81,6 +82,13 @@ int main(int argc, char* argv[]){
     char *sValue = NULL;
     int c;
     AbstractScheduler* ass = NULL;
+
+    double CpuUtilization;
+    double IoUtilization;
+    double AvgTurnAround;
+    double AvgCpuWait;
+    double throughPut;
+
 
     opterr = 0;
     char *pEnd;
@@ -153,6 +161,7 @@ int main(int argc, char* argv[]){
             else if (curEvent->get_prevState() == Process::READY && curEvent->get_newState() == Process::RUNNING){
 
                 curProc->set_state(Process::RUNNING);
+                curProc->set_totalCpuWaitTime(currentTime,curProc->get_lastTransitionTime());
 
                 int allowedTime = curProc->get_remainingCPUBurst();
                 finalState = Process::BLOCKED;
@@ -185,6 +194,7 @@ int main(int argc, char* argv[]){
                 curProc->set_state(Process::BLOCKED);
                 int calculatedIb = rand.myrandom(curProc->get_mib());
                 finalState = Process::READY;
+                curProc->set_totalIOTime(calculatedIb);
                 eventQ.push(new Event(curProc->get_pid(),(currentTime + calculatedIb),curEvent->get_newState(),finalState));
 
                 cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "RUNNG" << " " << "->" << " "
@@ -203,6 +213,7 @@ int main(int argc, char* argv[]){
 
                 ass->addProcess(curProc);
                 curProc->set_state(Process::READY);
+                
                 //just print remainingCPUBurst (Cbr)
 
                 //remainingCPUTime
@@ -235,10 +246,39 @@ int main(int argc, char* argv[]){
     }
 
 
-    /*    for(vector<Process>::iterator it = procObjList.begin(); it!=procObjList.end(); it++)
-          {
-    //cout << procObjMap[it->second.get_pid()] << endl;
-    cout << "iterating " << *it << endl;
-    } */
+    cout << ass->get_schedulerName() << endl;
+    int FinishTime, TurnaroundTime, IOTime, CPU_waitTime;
+    for(map<int,Process*>::iterator it = procObjMap.begin(); it!=procObjMap.end(); it++)
+    {
+        Process* prc = procObjMap[it->first];
+        FinishTime = prc->get_lastTransitionTime();
+        TurnaroundTime = FinishTime - prc->get_at();
+       
+        cout << setw(4) << setfill('0') << prc->get_pid() << ":" << setw(5) << setfill(' ') << prc->get_at() <<  setw(5) << setfill(' ') << prc->get_tct()<< setw(5) << setfill(' ') << prc->get_mcb() << setw(5) << setfill(' ') << prc->get_mib() << setw(2) << setfill(' ') << prc->get_sp() << " |" ;
 
+        cout << setw(6) << setfill(' ') << FinishTime << setw(6) << setfill(' ') << TurnaroundTime << setw(6) << setfill(' ') << prc->get_totalIOTime() << setw(6) <<setfill(' ') << prc->get_totalCpuWaitTime() << endl;
+    
+        CpuUtilization = CpuUtilization + prc->get_tct();
+        IoUtilization = IoUtilization + prc->get_totalIOTime();
+        AvgTurnAround = AvgTurnAround + TurnaroundTime;
+        AvgCpuWait = AvgCpuWait + prc->get_totalCpuWaitTime();
+    }     
+   
+    double procMapSize = (double)procObjMap.size();
+    CpuUtilization = (CpuUtilization/currentTime)*100;
+    IoUtilization = (IoUtilization/currentTime)*100;
+    AvgTurnAround = AvgTurnAround/procMapSize;
+    AvgCpuWait = AvgCpuWait/procMapSize;
+    throughPut = (procMapSize/currentTime)*100;
+    printf("SUM: %d %.2lf %.2lf %.2lf %.2lf %.3lf\n",
+          currentTime,
+          CpuUtilization,
+          IoUtilization,
+          AvgTurnAround,
+          AvgCpuWait,         
+          throughPut);
+
+//cout << "SUM:" << " " << currentTime << " " << CpuUtilization << " " << IoUtilization << " " << AvgTurnAround << " " << AvgCpuWait << endl;
 }
+
+
