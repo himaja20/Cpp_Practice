@@ -12,6 +12,8 @@
 #include "RRScheduler.h"
 #include "FIFO.h"
 #include "LCFS.h"
+#include "SJF.h"
+
 
 
 using namespace std;
@@ -55,6 +57,9 @@ AbstractScheduler* generateQuantum(char* opArg){
             break;
         case 'L' :
             ass = new LCFS(quantum);
+            break;
+        case 'S' :
+            ass = new SJF(quantum);
             break;
     }
     return ass;
