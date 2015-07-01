@@ -28,9 +28,12 @@ class RandomUtil{
                 ranvals = new int[tmp];
                 ranvalsSize = tmp;
             }
+            else{
+                exit(0);
+            }
 
             while(rfin >> tmp){
-               ranvals[i] = tmp;//segmentation field
+                ranvals[i] = tmp;//segmentation field
                 i++;
             }
 
@@ -51,7 +54,7 @@ class RandomUtil{
             }
             returnVal =  1 + (ranvals[offset] % burst);
             offset++;
-            
+
             return returnVal;
         }
 };

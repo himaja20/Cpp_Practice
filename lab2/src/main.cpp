@@ -43,7 +43,7 @@ class myComparison{
 
 AbstractScheduler* generateQuantum(char* opArg){
 
-    char* pEnd;
+    char* pEnd = NULL;
     int quantum = INT_MAX;
     char c = opArg[0];
     AbstractScheduler* ass;
@@ -77,12 +77,15 @@ int main(int argc, char* argv[]){
 
     char* FILE_NAME;
     char* R_FILE;
-    int at,tct,mcb,mib;
-    int nextCPUFreeTime;
-    int cpuBurst;
+    int at = 0;
+    int tct = 0;
+    int mcb = 0;
+    int mib = 0;
+    int nextCPUFreeTime = 0;
+    int cpuBurst = 0;
     int ioInProgress = 0;
     double totalIOTime_noOverlap = 0;
-    int iobStart;
+    int iobStart = 0;
 
 
     map<int,Process*> procObjMap;
@@ -90,18 +93,22 @@ int main(int argc, char* argv[]){
 
     bool vflag = false;
     char *sValue = NULL;
-    int c;
+    int c = 0;
     AbstractScheduler* ass = NULL;
 
-    double CpuUtilization;
-    double IoUtilization;
-    double AvgTurnAround;
-    double AvgCpuWait;
-    double throughPut;
+    double CpuUtilization = 0.0;
+    double IoUtilization = 0.0;
+    double AvgTurnAround = 0.0;
+    double AvgCpuWait = 0.0;
+    double throughPut = 0.0;
 
+    int FinishTime = 0;
+    int TurnaroundTime = 0;
+    int IOTime = 0;
+    int CPU_waitTime = 0;
 
     opterr = 0;
-    char *pEnd;
+    char *pEnd = NULL;
     while((c = getopt(argc, argv, "vs:")) != -1)
     {
         switch(c)
@@ -150,7 +157,7 @@ int main(int argc, char* argv[]){
     int currentTime = 0;
     nextCPUFreeTime = currentTime;
     Process::States finalState;
-    int timeInPrevState;
+    int timeInPrevState = 0;
     while(eventQ.size() > 0){
 
         Event* curEvent =  eventQ.top();
@@ -277,7 +284,6 @@ int main(int argc, char* argv[]){
 
 
     cout << ass->get_schedulerName() << endl;
-    int FinishTime, TurnaroundTime, IOTime, CPU_waitTime;
     for(map<int,Process*>::iterator it = procObjMap.begin(); it!=procObjMap.end(); it++)
     {
         Process* prc = procObjMap[it->first];

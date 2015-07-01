@@ -12,10 +12,9 @@ class Event{
         int pid;
         Process::States prevState;
         Process::States newState;
-
+        int eid;
     public:
 
-        int eid;
         Event(int pidP, int TstampP, Process::States prevStateP, Process::States newStateP){
             eid = e_counter++;
             pid = pidP;
