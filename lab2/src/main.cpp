@@ -171,6 +171,7 @@ int main(int argc, char* argv[]){
             timeInPrevState = currentTime - curProc->get_lastTransitionTime();
 
             if (curEvent->get_prevState() == Process::CREATED && curEvent->get_newState() == Process::READY){
+                curProc->set_lastTransitionTime(currentTime);
                 ass->addProcess(curProc);           
                 if (vflag){
                     cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "CREATED" << " " << "->" << " "
@@ -241,6 +242,7 @@ int main(int argc, char* argv[]){
                     << "READY" << "  cb=" << curProc->get_remainingCPUBurst() << " rem=" << curProc->get_remainingCPUTime() 
                     << " prio=" << curProc->get_dp()+1 << endl;}
 
+                curProc->set_lastTransitionTime(currentTime);
                 ass->addProcess(curProc);
                 curProc->set_state(Process::READY);
 
@@ -258,6 +260,7 @@ int main(int argc, char* argv[]){
                 if(vflag){
                 cout << currentTime << " " << curProc->get_pid() << " " <<  timeInPrevState <<": "<< "BLOCK" << " " << "->" << " "
                     << "READY" << endl;}
+                curProc->set_lastTransitionTime(currentTime);
                 ass->addProcess(curProc);
                 curProc->set_state(Process::READY);
                 //just push it to ready queue
