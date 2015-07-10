@@ -293,9 +293,9 @@ int main(int argc, char* argv[]){
         FinishTime = prc->get_lastTransitionTime();
         TurnaroundTime = FinishTime - prc->get_at();
 
-        cout << setw(4) << setfill('0') << prc->get_pid() << ":" << setw(5) << setfill(' ') << prc->get_at() <<  setw(5) << setfill(' ') << prc->get_tct()<< setw(5) << setfill(' ') << prc->get_mcb() << setw(5) << setfill(' ') << prc->get_mib() << setw(2) << setfill(' ') << prc->get_sp() << " |" ;
+        cout << setw(4) << setfill('0') << prc->get_pid() << ":" << " " <<  setw(4) << setfill(' ') << prc->get_at() << " " <<  setw(4) << setfill(' ') << prc->get_tct()<< " " << setw(4) << setfill(' ') << prc->get_mcb() << " " << setw(4) << setfill(' ') << prc->get_mib() << " " << setw(1) << setfill(' ') << prc->get_sp() << " |" ;
 
-        cout << setw(6) << setfill(' ') << FinishTime << setw(6) << setfill(' ') << TurnaroundTime << setw(6) << setfill(' ') << prc->get_totalIOTime() << setw(6) <<setfill(' ') << prc->get_totalCpuWaitTime() << endl;
+        cout << " " << setw(5) << setfill(' ') << FinishTime << " " << setw(5) << setfill(' ') << TurnaroundTime << " " << setw(5) << setfill(' ') << prc->get_totalIOTime() << " " <<  setw(5) <<setfill(' ') << prc->get_totalCpuWaitTime() << endl;
 
         CpuUtilization = CpuUtilization + prc->get_tct();
         IoUtilization = IoUtilization + prc->get_totalIOTime();
