@@ -5,10 +5,33 @@
 #include <stdio.h>
 #include <sstream>
 #include <vector>
+#include "AbstractPageReplacement.h"
 #include "mmu.h"
+#include "FIFO.h"
 //#include "pte.h"
 
 using namespace std;
+
+
+AbstractPageReplacement* getAlgObj(char* opArg){
+
+    AbstractPageReplacement* apr;
+    char c;
+    c = opArg[0];
+    switch(c) 
+    {
+        case 'f':
+        apr = new FIFO();
+        break;
+
+        case 'r':
+        break;
+
+    }
+
+}
+
+
 
 int main(int argc, char* argv[]){
     char* FILE_NAME;
@@ -21,6 +44,7 @@ int main(int argc, char* argv[]){
     string line;
     int op;
     int vpageindex;
+    AbstractPageReplacement* algObj;
     
 //    stringstream ss(line);
 
@@ -31,7 +55,7 @@ int main(int argc, char* argv[]){
         {
             case 'a':
                 aValue = optarg;
-                cout << aValue << endl;
+                algObj = getAlgObj(aValue);
                 break;
 
             case 'f':
@@ -64,7 +88,7 @@ int main(int argc, char* argv[]){
         exit(0);
     }
 
-    mmu* mmuObj = new mmu(num_of_frames,aValue,oValue);
+    mmu* mmuObj = new mmu(num_of_frames,aValue,oValue,algObj);
 
     if(!fin.eof()){
        while(getline(fin,line)){
