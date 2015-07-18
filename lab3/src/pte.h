@@ -1,4 +1,5 @@
-
+#ifndef PTE_H
+#define PTE_H
 
 struct pte{
 
@@ -9,3 +10,4 @@ struct pte{
     unsigned int pageFrameNumber:6;
 
 };
+#endif

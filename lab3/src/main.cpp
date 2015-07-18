@@ -5,13 +5,15 @@
 #include <stdio.h>
 #include <sstream>
 #include <vector>
-#include "AbstractPageReplacement.h"
-#include "mmu.h"
+//#include "AbstractPageReplacement.h"
 #include "FIFO.h"
+#include "mmu.h"
 //#include "pte.h"
 
 using namespace std;
 
+
+AbstractPageReplacement *algObj;
 
 AbstractPageReplacement* getAlgObj(char* opArg){
 
@@ -21,14 +23,14 @@ AbstractPageReplacement* getAlgObj(char* opArg){
     switch(c) 
     {
         case 'f':
-        apr = new FIFO();
+        algObj = new FIFO();
         break;
 
         case 'r':
         break;
 
     }
-
+return apr;
 }
 
 
@@ -44,7 +46,6 @@ int main(int argc, char* argv[]){
     string line;
     int op;
     int vpageindex;
-    AbstractPageReplacement* algObj;
     
 //    stringstream ss(line);
 
@@ -55,18 +56,16 @@ int main(int argc, char* argv[]){
         {
             case 'a':
                 aValue = optarg;
-                algObj = getAlgObj(aValue);
+                getAlgObj(aValue);
                 break;
 
             case 'f':
                 fValue = optarg;
                 num_of_frames = strtol(fValue,&pEnd,10);
-                cout <<  num_of_frames << endl;
                 break;
 
             case 'o':
                 oValue = optarg;
-                cout << oValue << endl;
                 break;
 
         }
@@ -88,7 +87,7 @@ int main(int argc, char* argv[]){
         exit(0);
     }
 
-    mmu* mmuObj = new mmu(num_of_frames,aValue,oValue,algObj);
+    mmu* mmuObj = new mmu(num_of_frames,oValue,algObj);
 
     if(!fin.eof()){
        while(getline(fin,line)){
@@ -99,17 +98,12 @@ int main(int argc, char* argv[]){
                 cout << "virtual page index more than 63" << endl;
                 exit(0);
                 }
+                mmuObj->setOptionFlags();
                 mmuObj->handleInstruction(op,vpageindex);
-                
-//                cout << " op " << op << "  vepageindex  " << vpageindex << endl;
         }
         }
     }
-
-
-
-
-
+    mmuObj->printFinalInfo(); 
 }
 
 }
