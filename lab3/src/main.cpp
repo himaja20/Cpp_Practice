@@ -88,6 +88,7 @@ int main(int argc, char* argv[]){
     }
 
     mmu* mmuObj = new mmu(num_of_frames,oValue,algObj);
+    mmuObj->setOptionFlags();
 
     if(!fin.eof()){
        while(getline(fin,line)){
@@ -98,7 +99,6 @@ int main(int argc, char* argv[]){
                 cout << "virtual page index more than 63" << endl;
                 exit(0);
                 }
-                mmuObj->setOptionFlags();
                 mmuObj->handleInstruction(op,vpageindex);
         }
         }

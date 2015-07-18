@@ -1,7 +1,7 @@
-
 #include "pte.h"
 #include <iomanip>
 #include <cstring>
+#include "stats.h"
 
 //#include "AbstractPageReplacement.h"
 
@@ -25,6 +25,7 @@ class mmu {
         bool p_flag;
         bool f_flag;
         bool a_flag;
+        stats statsVars;
 
 
     public:
@@ -44,8 +45,24 @@ class mmu {
             p_flag = false;
             f_flag = false;
             a_flag = false;
+            statsVars.unmaps = 0;
+            statsVars.maps = 0;
+            statsVars.ins = 0;
+            statsVars.outs = 0;
+            statsVars.zeros = 0;
         }
 
+        
+        void printSum(){
+        
+            long long totalcost;
+            totalcost = (statsVars.maps + statsVars.unmaps)*400 + (statsVars.ins + statsVars.outs)*3000 + 
+                (statsVars.zeros)*150 + instrCounter;
+            cout << "SUM " <<  instrCounter << " " << "U=" << statsVars.unmaps << " " << "M=" <<  statsVars.maps << " " 
+             << "I=" << statsVars.ins << " " << "O=" << statsVars.outs << " " << "Z=" << statsVars.zeros << " ===> " << totalcost << endl;
+        }
+        
+        
         void printPte(){
 
             string myPte;
@@ -62,7 +79,8 @@ class mmu {
                     (it->pagedout == 1)? cout << "S " : cout << "- ";
                 }
                 pteIndex++;
-            } 
+            }
+            cout << endl;
         }
 
         void setOptionFlags(){
@@ -113,15 +131,25 @@ class mmu {
                 printPte();
             }
             if (F_flag){
-                
+                printF2P();  
             }
-    
+            if (S_flag){
+                printSum();
+            }
+
         }
 
 
         void printF2P(){
 
+            for(vector<unsigned int>::iterator it = frameToPageMapping.begin(); it !=frameToPageMapping.end(); it++){
+               (*it == 0) ? cout << "* " : cout << *it << " ";
+            }
+            cout << endl;
 
+            // for(vector<unsigned int>::iterator it = frameToPageMapping.begin(); it !=frameToPageMapping.end(); it++){
+            //    (it->present == 0)? cout<< "*" : cout << it->pageFrameNumber << " ";
+            // }
 
         }
 
@@ -129,7 +157,10 @@ class mmu {
             pte &page = pageTable[pIndex];
             unsigned int framenum; 
             unsigned int v_oldPageNum;
+            
+            if(O_flag){
             cout << "==> inst: " << op << " " << pIndex << endl;
+            }
 
             if (op == 1) {
                 page.modified = 1;
@@ -147,8 +178,20 @@ class mmu {
 
                     page.pageFrameNumber = framenum;
                     page.present = 1;
+                    
+                    if(O_flag)
+                    {
                     cout << instrCounter << ": " << "ZERO" << " " << setw(8) << setfill(' ') << framenum << endl;
-                    cout << instrCounter << ": " << "MAP  " << " " << setw(3) << setfill(' ') << pIndex << " " << setw(3) << setfill(' ') << framenum << endl;
+                    }
+                    statsVars.zeros++;
+                   
+                   if(O_flag){
+
+                    cout << instrCounter << ": " << "MAP  " << " " << setw(3) << setfill(' ') << pIndex 
+                            << " " << setw(3) << setfill(' ') << framenum << endl;
+                    }
+
+                    statsVars.maps++;
                 }
                 else{
 
@@ -156,28 +199,55 @@ class mmu {
                     v_oldPageNum = frameToPageMapping[framenum];
                     pte &v_oldPage = pageTable[v_oldPageNum];
                     v_oldPage.present = 0;
-                    cout << instrCounter << ": " << "UNMAP" << " " << setw(3) << setfill(' ') << v_oldPageNum << " " << setw(3) << setfill(' ') << framenum << endl; 
+                    
+                    if(O_flag){
+                    cout << instrCounter << ": " << "UNMAP" << " " << setw(3) << setfill(' ') << v_oldPageNum 
+                            << " " << setw(3) << setfill(' ') << framenum << endl;
+                    }
+
+                    statsVars.unmaps++;
+
                     if (v_oldPage.modified == 1) {
                         v_oldPage.modified = 0;
                         v_oldPage.pagedout = 1;
-                        //                cout << "in the if" << endl;
-                        cout << instrCounter << ": " << "OUT  " << " " << setw(3) << setfill(' ') <<  v_oldPageNum << " " << setw(3) << setfill(' ') << framenum << endl;
+                        
+                        if(O_flag){
+                        cout << instrCounter << ": " << "OUT  " << " " << setw(3) << setfill(' ') <<  v_oldPageNum 
+                            << " " << setw(3) << setfill(' ') << framenum << endl;
+                        }
+
+                        statsVars.outs++;
                     }
 
 
                     frameToPageMapping[framenum] = pIndex;
                     if(page.pagedout == 1)
                     {
-                        cout << instrCounter << ": " << "IN   " << " " << setw(3) << setfill(' ') << pIndex << " " << setw(3) << setfill(' ') << framenum << endl;
+                        if (O_flag){
+                        cout << instrCounter << ": " << "IN   " << " " << setw(3) << setfill(' ') << pIndex << " " 
+                            << setw(3) << setfill(' ') << framenum << endl;
+                        }
+
+                        statsVars.ins++;
                     }
                     else{
-
+                        
+                        if(O_flag){
                         cout << instrCounter << ": " << "ZERO " << setw(8) << setfill(' ') << framenum << endl;
+                        }
+
+                        statsVars.zeros++;
                     }
 
                     page.pageFrameNumber = framenum;
                     page.present = 1;
-                    cout << instrCounter << ": " << "MAP  " << " " << setw(3) << setfill(' ') << pIndex << " " << setw(3) << setfill(' ') << framenum << endl;
+                    
+                    if(O_flag){
+                        cout << instrCounter << ": " << "MAP  " << " " << setw(3) << setfill(' ') << pIndex << " " << setw(3) 
+                        << setfill(' ') << framenum << endl;
+                    }
+                   
+                   statsVars.maps++;
 
 
                 }
@@ -188,8 +258,14 @@ class mmu {
             if (p_flag) {
                 printPte();
             }
+            if (f_flag){
+                printF2P();
+            }
 
-          }
+        }
+
+
+
 
 
 };
