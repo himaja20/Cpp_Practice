@@ -5,96 +5,71 @@
 using namespace std;
 class NRU : public AbstractPageReplacement {
     private:
-        vector<pte> class3;
-        vector<pte> class2;
-        vector<pte> class1;
-        vector<pte> class0;
-        vector<int> nonEmptyFlag;
+
+        int pageRequestCounter;
 
     public:
 
         NRU(): AbstractPageReplacement(){
-            cout << "in the NRU constructor" << endl;
-            class3 = vector<pte>(0);
-            class2 = vector<pte>(0);
-            class1 = vector<pte>(0);
-            class0 = vector<pte>(0);
-            nonEmptyFlag = vector<int>(4,0);
-
+            pageRequestCounter = 0;
         } 
 
         unsigned int getFrame(vector<pte>& pageTable,vector<unsigned int>& frameTable, vector<unsigned int>& fToP){
-            cout << "in getFrame of NRU " << endl;
-            int framenum;
+
+            vector<pte> *classes = new vector<pte>[4];
+            int vPageIndex;
+            int frameNum;
             int myRand= rand->myrandom();
             int numFrames;
-            int classIndex = getLowestClass(pageTable);
-            
-            
-            switch (classIndex) {
-                case 0:
-                    numFrames = class0.size();
-                    break;
-                case 1:
-                    numFrames = class1.size();
-                    break;
-                case 2:
-                    numFrames = class2.size();
-                    break;
-                case 3:
-                    numFrames = class3.size();
-                    break;
-            }
 
-            framenum = (myRand % numFrames);
-            frameTable.erase(frameTable.begin()+framenum);
-            frameTable.push_back(framenum);
-            return framenum;
-       
-
-        }
-
-        int getLowestClass(vector<pte>& pageTable){
-
-        cout << "in getLowest class function " << endl;
-
-         for(vector<pte>::iterator it = pageTable.begin();it != pageTable.end(); it++) 
-            {
-
-            cout << *it << "printing *it " << endl;
-                if((it->referenced == 0) && (it->modified == 0) )
+            if (pageRequestCounter == 10) {
+                pageRequestCounter = 0;
+                for (vector<pte>::iterator it = pageTable.begin() ; it !=pageTable.end(); it++)
                 {
-                    class0.push_back(*it);
-                    nonEmptyFlag[0] = 1;
-                }
-                else if((it->referenced == 0) && (it->modified == 1))
-                {
-                    class1.push_back(*it);
-                    nonEmptyFlag[1] = 1;
-                }
-                else if((it->referenced == 1) && (it->modified ==1 ))
-                {
-                    class2.push_back(*it);
-                    nonEmptyFlag[2] = 1;
-                }
-                else if((it->referenced == 1) && (it->modified == 0))
-                {
-                    class3.push_back(*it);
-                    nonEmptyFlag[3] = 1;
+                    if(it->present == 1){
+                        it->referenced = 0;
+                    }
                 }
             }
-            
-            int classIndex = -1;
-            for(vector<int>::iterator it = nonEmptyFlag.begin() ; it != nonEmptyFlag.end() ; it++)
+            else{
+                pageRequestCounter++;
+            }
+
+            for(vector<pte>::iterator it = pageTable.begin();it != pageTable.end(); it++) 
             {
+                if(it->present == 1) {
+                    if((it->referenced == 0) && (it->modified == 0) )
+                    {
+                        classes[0].push_back(*it);
+                    }
+                    else if((it->referenced == 0) && (it->modified == 1))
+                    {
+                        classes[1].push_back(*it);
+                    }
+                    else if((it->referenced == 1) && (it->modified ==1 ))
+                    { 
+                        classes[3].push_back(*it);
+                    }
+                    else if((it->referenced == 1) && (it->modified == 0))
+                    { 
+                        classes[2].push_back(*it);
+                    }
+                }
+            }
+
+            int classIndex = -1; 
+            while(true){
                 classIndex++;
-                if (*it == 1){
+                if (classes[classIndex].size() > 0) {
+                    numFrames = classes[classIndex].size();
                     break;
                 }
             }
-
-            return classIndex;
-
+            vPageIndex = myRand % numFrames;
+            pte &page = (classes[classIndex])[vPageIndex];
+            frameNum = page.pageFrameNumber;
+            frameTable.erase(frameTable.begin()+frameNum);
+            frameTable.push_back(frameNum);
+            return frameNum;
         }
-
 };

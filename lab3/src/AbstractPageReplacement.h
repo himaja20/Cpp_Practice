@@ -17,9 +17,7 @@ protected:
 
 public: 
 
-    AbstractPageReplacement(){
-        cout << "in abstract constructor" << endl;
-    }
+    AbstractPageReplacement(){}
     virtual unsigned int getFrame(vector<pte>&,vector<unsigned int>&,vector<unsigned int>&) = 0;
 
     void setRandomUtil(RandomUtil* rand){
