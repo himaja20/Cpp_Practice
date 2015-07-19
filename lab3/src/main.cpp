@@ -8,6 +8,8 @@
 //#include "AbstractPageReplacement.h"
 #include "FIFO.h"
 #include "mmu.h"
+#include "randomUtil.h"
+#include "Random.h"
 //#include "pte.h"
 
 using namespace std;
@@ -27,6 +29,7 @@ AbstractPageReplacement* getAlgObj(char* opArg){
         break;
 
         case 'r':
+        algObj = new Random();
         break;
 
     }
@@ -46,6 +49,7 @@ int main(int argc, char* argv[]){
     string line;
     int op;
     int vpageindex;
+    int vPageTableSize = 64;
     
 //    stringstream ss(line);
 
@@ -73,21 +77,28 @@ int main(int argc, char* argv[]){
     FILE_NAME = argv[optind];
     R_FILE = argv[optind + 1];
 
-    ifstream fin(FILE_NAME, ios::in | ios::binary);
-    //  RandomUtil rand(R_FILE);
-
     if ((R_FILE == "") || (FILE_NAME == "")) {
         cout << "Input file paths empty";
         return 0;
     }
 
+    ifstream fin(FILE_NAME, ios::in | ios::binary);
     if (!fin.is_open())
     {
         cout << "File open failed" << endl ;
         exit(0);
     }
+ 
+    //RandomUtil rand(R_FILE);
+    RandomUtil* rand = new RandomUtil(R_FILE);
 
-    mmu* mmuObj = new mmu(num_of_frames,oValue,algObj);
+    algObj->setRandomUtil(rand);
+
+    if(num_of_frames == 0) 
+    {
+        num_of_frames = 32; 
+    }
+    mmu* mmuObj = new mmu(num_of_frames,oValue,algObj,vPageTableSize);
     mmuObj->setOptionFlags();
 
     if(!fin.eof()){

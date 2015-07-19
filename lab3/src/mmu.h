@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <cstring>
 #include "stats.h"
+#include "randomUtil.h"
 
 //#include "AbstractPageReplacement.h"
 
@@ -26,15 +27,16 @@ class mmu {
         bool f_flag;
         bool a_flag;
         stats statsVars;
-
+        int vPageTableSize;
 
     public:
-        mmu(int numOfFrames, char* opVals, AbstractPageReplacement* apr){
-
-            pageTable = vector<pte>(64);
+        mmu(int numOfFrames, char* opVals, AbstractPageReplacement* apr, int vPageTableSize){
+            
+            this->vPageTableSize = vPageTableSize; 
+            pageTable = vector<pte>(vPageTableSize);
             numFrames = numOfFrames; 
             frameTable = vector<unsigned int>(0);
-            frameToPageMapping = vector<unsigned int> (numFrames);
+            frameToPageMapping = vector<unsigned int> (numFrames,vPageTableSize);
             this->opVals = opVals;
             this->apr = apr;
             instrCounter = 0;
@@ -143,7 +145,7 @@ class mmu {
         void printF2P(){
 
             for(vector<unsigned int>::iterator it = frameToPageMapping.begin(); it !=frameToPageMapping.end(); it++){
-               (*it == 0) ? cout << "* " : cout << *it << " ";
+               (*it >= vPageTableSize) ? cout << "* " : cout << *it << " ";
             }
             cout << endl;
 
