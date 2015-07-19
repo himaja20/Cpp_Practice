@@ -1,5 +1,3 @@
-
-
 #include "AbstractPageReplacement.h"
 #include <vector>
 #include "pte.h"
@@ -17,8 +15,6 @@ class Random : public AbstractPageReplacement {
         Random(): AbstractPageReplacement(){} 
 
         unsigned int getFrame(vector<pte>& pageTable,vector<unsigned int>& frameTable, vector<unsigned int>& fToP){
-
-            
             int framenum;
             int numFrames = frameTable.size();
             int myRand= rand->myrandom();

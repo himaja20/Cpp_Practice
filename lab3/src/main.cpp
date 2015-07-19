@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -10,6 +9,8 @@
 #include "mmu.h"
 #include "randomUtil.h"
 #include "Random.h"
+#include "SecondChance.h"
+#include "NRU.h"
 //#include "pte.h"
 
 using namespace std;
@@ -25,15 +26,22 @@ AbstractPageReplacement* getAlgObj(char* opArg){
     switch(c) 
     {
         case 'f':
-        algObj = new FIFO();
-        break;
+            algObj = new FIFO();
+            break;
 
         case 'r':
-        algObj = new Random();
-        break;
+            algObj = new Random();
+            break;
+        
+        case 's':
+            algObj = new SecondChance();
+            break;
 
+        case 'N':
+            algObj = new NRU();
+            break;
     }
-return apr;
+    return apr;
 }
 
 
@@ -50,8 +58,8 @@ int main(int argc, char* argv[]){
     int op;
     int vpageindex;
     int vPageTableSize = 64;
-    
-//    stringstream ss(line);
+
+    //    stringstream ss(line);
 
     int c = 0;
     while((c = getopt(argc, argv, "a:o:f:")) != -1)
@@ -88,7 +96,7 @@ int main(int argc, char* argv[]){
         cout << "File open failed" << endl ;
         exit(0);
     }
- 
+
     //RandomUtil rand(R_FILE);
     RandomUtil* rand = new RandomUtil(R_FILE);
 
@@ -102,19 +110,19 @@ int main(int argc, char* argv[]){
     mmuObj->setOptionFlags();
 
     if(!fin.eof()){
-       while(getline(fin,line)){
-         stringstream ss(line);
-         if(line[0] != '#'){
-            if (ss >> op >> vpageindex){
-                if (vpageindex > 63){
-                cout << "virtual page index more than 63" << endl;
-                exit(0);
+        while(getline(fin,line)){
+            stringstream ss(line);
+            if(line[0] != '#'){
+                if (ss >> op >> vpageindex){
+                    if (vpageindex > 63){
+                        cout << "virtual page index more than 63" << endl;
+                        exit(0);
+                    }
+                    mmuObj->handleInstruction(op,vpageindex);
                 }
-                mmuObj->handleInstruction(op,vpageindex);
+            }
         }
-        }
+        mmuObj->printFinalInfo(); 
     }
-    mmuObj->printFinalInfo(); 
-}
 
 }

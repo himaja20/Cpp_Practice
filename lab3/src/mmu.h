@@ -196,7 +196,6 @@ class mmu {
                     statsVars.maps++;
                 }
                 else{
-
                     framenum = apr->getFrame(pageTable,frameTable,frameToPageMapping);
                     v_oldPageNum = frameToPageMapping[framenum];
                     pte &v_oldPage = pageTable[v_oldPageNum];
