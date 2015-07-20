@@ -72,4 +72,6 @@ class NRU : public AbstractPageReplacement {
             frameTable.push_back(frameNum);
             return frameNum;
         }
+        
+        void updateFrameTable(vector<unsigned int>& frameTable, int framenum){}
 };

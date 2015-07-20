@@ -24,4 +24,7 @@ class FIFO : public AbstractPageReplacement {
             return framenum;
         }
 
+        
+    void updateFrameTable(vector<unsigned int>& frameTable, int framenum){}
+
 };

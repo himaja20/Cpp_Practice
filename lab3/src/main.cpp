@@ -11,6 +11,9 @@
 #include "Random.h"
 #include "SecondChance.h"
 #include "NRU.h"
+#include "Clock.h"
+#include "ClockVirtual.h"
+#include "LRU.h"
 //#include "pte.h"
 
 using namespace std;
@@ -18,9 +21,8 @@ using namespace std;
 
 AbstractPageReplacement *algObj;
 
-AbstractPageReplacement* getAlgObj(char* opArg){
+void getAlgObj(char* opArg){
 
-    AbstractPageReplacement* apr;
     char c;
     c = opArg[0];
     switch(c) 
@@ -40,8 +42,19 @@ AbstractPageReplacement* getAlgObj(char* opArg){
         case 'N':
             algObj = new NRU();
             break;
+
+        case 'c':
+            algObj = new Clock();
+            break;
+
+        case 'X':
+            algObj = new ClockVirtual();
+            break;
+
+        case 'l':
+            algObj = new LRU();
+            break;
     }
-    return apr;
 }
 
 

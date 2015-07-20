@@ -168,6 +168,7 @@ class mmu {
                 page.modified = 1;
             }
             page.referenced = 1;
+            framenum = page.pageFrameNumber;
 
             if(page.present == 0) {
 
@@ -252,6 +253,12 @@ class mmu {
 
 
                 }
+
+            }
+            
+            else{
+                
+                 apr->updateFrameTable(frameTable, framenum);
 
             }
 
