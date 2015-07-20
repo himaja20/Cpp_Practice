@@ -15,6 +15,7 @@
 #include "ClockVirtual.h"
 #include "LRU.h"
 #include "Aging.h"
+#include "AgingVirtual.h"
 //#include "pte.h"
 
 using namespace std;
@@ -56,9 +57,9 @@ void getAlgObj(char* opArg){
             algObj = new LRU();
             break;
 
-//        case 'Y':
-  //          algObj = new AgingVirtual();
-    //        break;
+        case 'Y':
+            algObj = new AgingVirtual();
+            break;
 
         case 'a':
             algObj = new Aging();
