@@ -44,12 +44,12 @@ class RandomUtil{
         int myrandom() 
         {
             int returnVal;
+            returnVal = ranvals[offset];
+            offset++;
+
             if (offset == ranvalsSize - 1){
                 offset = 0;
             }
-            returnVal = ranvals[offset];
-            //returnVal = (ranvals[offset] % frameTableSize);
-            offset++;
 
             return returnVal;
         }

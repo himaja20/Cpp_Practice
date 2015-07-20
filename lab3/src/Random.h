@@ -19,8 +19,6 @@ class Random : public AbstractPageReplacement {
             int numFrames = frameTable.size();
             int myRand= rand->myrandom();
             framenum = (myRand % numFrames);
-            frameTable.erase(frameTable.begin()+framenum);
-            frameTable.push_back(framenum);
             return framenum;
         }
 

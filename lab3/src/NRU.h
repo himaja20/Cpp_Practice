@@ -22,18 +22,7 @@ class NRU : public AbstractPageReplacement {
             int myRand= rand->myrandom();
             int numFrames;
 
-            if (pageRequestCounter == 10) {
-                pageRequestCounter = 0;
-                for (vector<pte>::iterator it = pageTable.begin() ; it !=pageTable.end(); it++)
-                {
-                    if(it->present == 1){
-                        it->referenced = 0;
-                    }
-                }
-            }
-            else{
-                pageRequestCounter++;
-            }
+            pageRequestCounter++;
 
             for(vector<pte>::iterator it = pageTable.begin();it != pageTable.end(); it++) 
             {
@@ -68,8 +57,17 @@ class NRU : public AbstractPageReplacement {
             vPageIndex = myRand % numFrames;
             pte &page = (classes[classIndex])[vPageIndex];
             frameNum = page.pageFrameNumber;
-            frameTable.erase(frameTable.begin()+frameNum);
-            frameTable.push_back(frameNum);
+            
+            if (pageRequestCounter == 10) {
+               pageRequestCounter = 0;
+                for (vector<pte>::iterator it = pageTable.begin() ; it !=pageTable.end(); it++)
+                {
+                    if(it->present == 1){
+                        it->referenced = 0;
+                    }
+                }
+            }
+            
             return frameNum;
         }
         
