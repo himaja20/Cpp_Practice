@@ -31,9 +31,6 @@ class AgingVirtual : public AbstractPageReplacement {
                 currentCounter = counter[i];
                 currentCounter = currentCounter >> 1 | rBit << 31;
                 counter[i] = currentCounter;
-                if(page.present == 1){
-                    page.referenced = 0;
-                }
             //cout << counter[i] << "   counter Values " << i << endl;
             }
 
@@ -42,10 +39,12 @@ class AgingVirtual : public AbstractPageReplacement {
 
                 pte &page = pageTable[i];
                 if(page.present == 1) {
+                    page.referenced = 0;
+                
                     if (counter[i] < smallest){
                         smallest = counter[i];
                         smallestIndex = i;
-                       // cout << smallestIndex << " smallestIndex" << endl;
+                       // cou << smallestIndex << " smallestIndex" << endl;
                     }
                 }
             }

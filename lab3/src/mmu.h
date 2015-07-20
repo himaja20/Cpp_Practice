@@ -164,10 +164,6 @@ class mmu {
             cout << "==> inst: " << op << " " << pIndex << endl;
             }
 
-            if (op == 1) {
-                page.modified = 1;
-            }
-            page.referenced = 1;
             framenum = page.pageFrameNumber;
 
             if(page.present == 0) {
@@ -261,6 +257,10 @@ class mmu {
                  apr->updateFrameTable(frameTable, framenum);
 
             }
+            if (op == 1) {
+                page.modified = 1;
+            }
+            page.referenced = 1;
 
             instrCounter++;
             if (p_flag) {
