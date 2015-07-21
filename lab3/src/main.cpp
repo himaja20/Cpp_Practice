@@ -64,6 +64,9 @@ void getAlgObj(char* opArg){
         case 'a':
             algObj = new Aging();
             break;
+        default:
+            algObj = new LRU();
+            break;
     }
 }
 
@@ -108,10 +111,6 @@ int main(int argc, char* argv[]){
     FILE_NAME = argv[optind];
     R_FILE = argv[optind + 1];
 
-    if ((R_FILE == "") || (FILE_NAME == "")) {
-        cout << "Input file paths empty";
-        return 0;
-    }
 
     ifstream fin(FILE_NAME, ios::in | ios::binary);
     if (!fin.is_open())

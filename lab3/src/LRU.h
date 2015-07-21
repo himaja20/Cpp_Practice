@@ -13,7 +13,7 @@ public:
 
     unsigned int getFrame(vector<pte>& pageTable,vector<unsigned int>& frameTable, vector<unsigned int>& fToP){
             
-            int framenum;
+            unsigned int framenum;
             framenum = frameTable.front();
             frameTable.erase(frameTable.begin());
             frameTable.push_back(framenum);
@@ -23,11 +23,12 @@ public:
     }
 
 
-    void updateFrameTable(vector<unsigned int>& frameTable, int framenum){
-           for(int i=0 ; i < frameTable.size() ; i++){
-                if (frameTable[i] == framenum){
+    void updateFrameTable(vector<unsigned int>& frameTable,int framenum){
+           unsigned int fNum = framenum;
+           for(unsigned int i=0 ; i < frameTable.size() ; i++){
+                if (frameTable[i] == fNum){
                     frameTable.erase(frameTable.begin()+i);
-                    frameTable.push_back(framenum);
+                    frameTable.push_back(fNum);
                     break;
                 }
            }

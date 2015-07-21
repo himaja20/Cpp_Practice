@@ -20,12 +20,11 @@ class AgingVirtual : public AbstractPageReplacement {
                 counter = vector<unsigned int>(pageTable.size(),0);
             }
             int framenum = -1;
-            int vPageIndex;
             unsigned int rBit;
             unsigned int currentCounter;
             unsigned int smallest = 0xffffffff;
             int smallestIndex;
-            for(int i = 0; i < pageTable.size() ; i++){
+            for(unsigned int i = 0; i < pageTable.size() ; i++){
                 pte &page = pageTable[i];
                 rBit = page.referenced;
                 currentCounter = counter[i];
@@ -34,7 +33,7 @@ class AgingVirtual : public AbstractPageReplacement {
             //cout << counter[i] << "   counter Values " << i << endl;
             }
 
-            for(int i = 0; i < pageTable.size() ; i++)
+            for(unsigned int i = 0; i < pageTable.size() ; i++)
             {
 
                 pte &page = pageTable[i];

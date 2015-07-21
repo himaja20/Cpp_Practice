@@ -26,7 +26,7 @@ class Aging : public AbstractPageReplacement {
                 unsigned int currentCounter;
                 unsigned int smallest = 0xffffffff;
                 int smallestIndex;
-                for(int i = 0; i < frameTable.size() ; i++){
+                for(unsigned int i = 0; i < frameTable.size() ; i++){
                     vPageIndex = fToP[i];
                     pte &page = pageTable[vPageIndex];
                     rBit = page.referenced;
@@ -36,7 +36,7 @@ class Aging : public AbstractPageReplacement {
                     page.referenced = 0;
                 }
 
-                for(int i = 0; i < counter.size() ; i++)
+                for(unsigned int i = 0; i < counter.size() ; i++)
                 {
                     if (counter[i] < smallest){
                         smallest = counter[i];

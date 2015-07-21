@@ -14,7 +14,7 @@ class mmu {
         vector<pte> pageTable;
         vector<unsigned int> frameTable;
         vector<unsigned int> frameToPageMapping;
-        int numFrames;
+        unsigned int numFrames;
         char* algVal;
         char* opVals;
         AbstractPageReplacement* apr;
@@ -27,10 +27,10 @@ class mmu {
         bool f_flag;
         bool a_flag;
         stats statsVars;
-        int vPageTableSize;
+        unsigned int vPageTableSize;
 
     public:
-        mmu(int numOfFrames, char* opVals, AbstractPageReplacement* apr, int vPageTableSize){
+        mmu(int numOfFrames, char* opVals, AbstractPageReplacement* apr,unsigned int vPageTableSize){
             
             this->vPageTableSize = vPageTableSize; 
             pageTable = vector<pte>(vPageTableSize);
