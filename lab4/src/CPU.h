@@ -2,84 +2,59 @@
 #include "Event.h"
 #include "myComparison.h"
 #include "AbstractDiskScheduler.h"
+#include <iomanip>
 
 using namespace std;
 
 
 class CPU {
 
-
-    
-
-public:
+    public:
 
         void test(int Tstamp, int Rid, IO_Req::States state){
-
             cout << Tstamp << "  " << Rid << "  " << state << "   "  << endl;
-
-
         }
 
         void start_IO(priority_queue<Event*,vector<Event*>,myComparison>& eventQ, map<int,IO_Req*>& IO_ReqMap,AbstractDiskScheduler* ds){
-
+            cout << "TRACE" << endl;
             int nextCPUFreeTime = 0;
             int curTrackNum = 0;
             while(eventQ.size() > 0){ 
                 Event* curEvent = eventQ.top();
+                eventQ.pop();
                 int curReqId = curEvent->getRid();
                 int curTimeStamp = curEvent->getTstamp();
                 IO_Req* curReq = IO_ReqMap[curReqId];
                 if(curEvent->getState() == IO_Req::ADD){
-
-                     //Insert into IO_queue;
-                    cout << curTimeStamp  << ":  " << curEvent->getRid() << "  " << "ADD  " << curReq->getRequestedTrack() << endl;
+                    cout << curTimeStamp  << ":  " << setw(4) << setfill(' ') << curEvent->getRid() 
+                    << " " << "add " << curReq->getRequestedTrack() << endl;
                     curReq->setState(IO_Req::ISSUE);
                     curReq->setStartingTime(curTimeStamp);
                     ds->addRequest(curReq);
-                 }   
-            
-                 else if (curEvent->getState() == IO_Req::ISSUE) {
-
+                }   
+                else if (curEvent->getState() == IO_Req::ISSUE) {
                     int nextEventTime;
-                    
-                    bool diskCheck = curTrackNum > curReq->getRequestedTrack();
-                   
-                   if(diskCheck){
-                        nextEventTime = curTimeStamp + (curTrackNum - curReq->getRequestedTrack());
-                    }
-                    else{
-                        nextEventTime = curTimeStamp + (curReq->getRequestedTrack() - curTrackNum);
-                    }
-                  
-                  cout << "nextEventTime  " << nextEventTime << endl;
-                   cout << curTimeStamp << ":  " << curEvent->getRid() << "  " << "ISSUE" << "  " << curReq->getRequestedTrack() << "  "
-                    << curTrackNum << "  " << endl;
-
+                    nextEventTime = curTimeStamp + abs(curTrackNum - curReq->getRequestedTrack());
+                    nextCPUFreeTime = curTimeStamp + abs(curTrackNum - curReq->getRequestedTrack());
+                    cout << curTimeStamp << ":  " << setw(4) << setfill(' ') << 
+                    curEvent->getRid() << " " << "issue" << " " << curReq->getRequestedTrack() << " "
+                        << curTrackNum << endl;
                     curReq->setState(IO_Req::FINISH);
-                    ds->addRequest(curReq);
                     eventQ.push(new Event(nextEventTime,curReq->getRid(),curReq->getState()));
-                    nextCPUFreeTime = curTimeStamp + curReq->getTrack();
-                    
-                 }   
-
+                }   
                 else if(curEvent->getState() == IO_Req::FINISH){
-                    
-                    cout << curTimeStamp << ":  " << curEvent->getRid() << "  " << "FINISH" << "  " 
-                    << curTimeStamp - curReq->getStartingTime() << endl;
-
+                    cout << curTimeStamp << ":  " << setw(4) << setfill(' ') << curEvent->getRid() << " " << "finish" << " " 
+                        << curTimeStamp - curReq->getStartingTime() << endl;
                     curTrackNum = curReq->getRequestedTrack();
-                   // cout << "In finish state" << endl;
-
                 }
                 if (curTimeStamp >= nextCPUFreeTime){
                     IO_Req* newReq = ds->getNewRequest();
                     if (newReq != NULL ) {
-                        eventQ.push(new Event(newReq->getArrTime(),newReq->getRid(),newReq->getState()));
+                        eventQ.push(new Event(curTimeStamp,newReq->getRid(),newReq->getState()));
                     }
 
                 }
-                eventQ.pop();
+            }
         }
-    }
 
 };
