@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
                 while(ss >> time >> track){
                 IO_Req* newReq = new IO_Req(time,track);
                 IO_ReqMap.insert(pair<int,IO_Req*>(newReq->getRid(),newReq));
-                Event* newEvent = new Event(time,newReq->getRid(),IO_Req::ADD);
+                Event* newEvent = new Event(newReq->getArrTime(),newReq->getRid(),IO_Req::ADD);
                 eventQ.push(newEvent);
                 }   
                     

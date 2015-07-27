@@ -3,6 +3,7 @@
 
 #include "Event.h"
 
+using namespace std;
 
 class myComparison{
 
@@ -19,7 +20,7 @@ class myComparison{
              *  
              */
             if (e1->getTstamp() == e2->getTstamp()){
-                return (e1->getEid() > e2->getEid());
+               return (e1->getEid() > e2->getEid());
             }
             return (e1->getTstamp() > e2->getTstamp());
 

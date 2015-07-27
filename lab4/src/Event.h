@@ -12,6 +12,7 @@ class Event{
         int Rid;
         IO_Req::States state;
         int eid;
+       // int curTimeStamp;
        
 
     public:

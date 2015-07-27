@@ -9,12 +9,13 @@ class IO_Req {
         int arrTime;
         int issueTime;
         int finishTime;
-        static int Req_Id;
+        static int Req_Counter;
         int Track;
         int requestedTrack;
+        int startingTime;
 
     public:
-
+        int Req_Id;
         enum States{
             ADD,ISSUE,FINISH
         };
@@ -25,11 +26,12 @@ class IO_Req {
 
             this->arrTime = arrTime;
             this->Track = Track;
-            this->Req_Id = Req_Id++;
+            this->Req_Id = Req_Counter++;
             this->finishTime = 0;
             this->issueTime = 0;
             this->state = ADD;
             this->requestedTrack = Track;
+            this->startingTime = 0;
         }
 
        int getRid(){
@@ -51,6 +53,19 @@ class IO_Req {
         int getRequestedTrack(){
             return requestedTrack;
         }
+
+        int getArrTime(){
+            return arrTime;
+        }
+
+        void setStartingTime(int time){
+             startingTime = time;
+        }
+
+        int getStartingTime(){
+            return startingTime;
+        }
+
 };
-int IO_Req::Req_Id = -1;
+int IO_Req::Req_Counter= 0;
 #endif
