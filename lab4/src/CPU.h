@@ -3,6 +3,7 @@
 #include "myComparison.h"
 #include "AbstractDiskScheduler.h"
 #include <iomanip>
+#include <vector>
 
 using namespace std;
 
@@ -14,13 +15,20 @@ class CPU {
         int totalHeadMovements;
         int totalTurnAroundTime;
         int totalWaitTime;
-        int maxWaitTime;
+        bool CpuLock;
+        vector<int> waitTimes;
 
 
     public:
 
-        void test(int Tstamp, int Rid, IO_Req::States state){
-            cout << Tstamp << "  " << Rid << "  " << state << "   "  << endl;
+
+        CPU(){
+            this->totalTime = 0;
+            this->totalHeadMovements = 0;
+            this->totalTurnAroundTime = 0;
+            this->totalWaitTime = 0;
+            this->CpuLock = false;
+            waitTimes = vector<int>(0);
         }
 
         void start_IO(priority_queue<Event*,vector<Event*>,myComparison>& eventQ, map<int,IO_Req*>& IO_ReqMap,AbstractDiskScheduler* ds){
@@ -45,10 +53,7 @@ class CPU {
                     int nextEventTime;
                     curReq->setDiskStartTime(curTimeStamp);
                     totalWaitTime += curReq->getDiskStartTime() - curReq->getReqAddTime();
-                    if(maxWaitTime < (curReq->getDiskStartTime() - curReq->getRequestedTrack()))
-                    {
-                        maxWaitTime = curReq->getDiskStartTime() - curReq->getReqAddTime();
-                    }
+                    waitTimes.push_back(curReq->getDiskStartTime() - curReq->getReqAddTime());
                     nextEventTime = curTimeStamp + abs(curTrackNum - curReq->getRequestedTrack());
                     nextCPUFreeTime = curTimeStamp + abs(curTrackNum - curReq->getRequestedTrack());
                     cout << curTimeStamp << ":  " << setw(4) << setfill(' ') << 
@@ -57,6 +62,7 @@ class CPU {
                     curReq->setState(IO_Req::FINISH);
                     eventQ.push(new Event(nextEventTime,curReq->getRid(),curReq->getState()));
                     totalHeadMovements += abs(curTrackNum - curReq->getRequestedTrack());
+                    CpuLock = false;
                 }   
                 else if(curEvent->getState() == IO_Req::FINISH){
                     cout << curTimeStamp << ":  " << setw(4) << setfill(' ') << curEvent->getRid() << " " << "finish" << " " 
@@ -65,9 +71,10 @@ class CPU {
                     curTrackNum = curReq->getRequestedTrack();
                     totalTurnAroundTime += curTimeStamp - curReq->getReqAddTime();
                 }
-                if (curTimeStamp >= nextCPUFreeTime){
+                if ((curTimeStamp >= nextCPUFreeTime) && (CpuLock == false)){
                     IO_Req* newReq = ds->getNewRequest();
                     if (newReq != NULL ) {
+                        CpuLock = true;
                         eventQ.push(new Event(curTimeStamp,newReq->getRid(),newReq->getState()));
                     }
 
@@ -83,9 +90,17 @@ class CPU {
             double IO_ReqMapSize = (double)IO_ReqMap.size();
             double avgTurnAroundTime = 0.0;
             double avgWaitTime = 0.0;
+            int maxWaitTime;
 
             avgTurnAroundTime = totalTurnAroundTime/IO_ReqMapSize; 
             avgWaitTime = totalWaitTime/IO_ReqMapSize;
+            
+            for(vector<int>::iterator it = waitTimes.begin(); it!=waitTimes.end();it++)
+            { 
+                
+                (maxWaitTime < *it)?(maxWaitTime = *it):(maxWaitTime = maxWaitTime);
+                
+            }
 
             cout << "IOREQS INFO" << endl;
             for(map<int,IO_Req*>::iterator it = IO_ReqMap.begin(); it!=IO_ReqMap.end(); it++)
