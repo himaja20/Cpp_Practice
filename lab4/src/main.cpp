@@ -76,6 +76,7 @@ int main(int argc, char* argv[]){
             }
         }
         cpuObj->start_IO(eventQ,IO_ReqMap,algObj);
+        cpuObj->printFinalInfo(IO_ReqMap);
 }
 
 

@@ -7,12 +7,11 @@ class IO_Req {
     private:
 
         int arrTime;
-        int issueTime;
-        int finishTime;
+        int diskEndTime;
         static int Req_Counter;
-        int Track;
         int requestedTrack;
-        int startingTime;
+        int diskStartTime;
+        int reqAddTime;
 
     public:
         int Req_Id;
@@ -25,13 +24,12 @@ class IO_Req {
         IO_Req(int arrTime, int Track){
 
             this->arrTime = arrTime;
-            this->Track = Track;
             this->Req_Id = Req_Counter++;
-            this->finishTime = 0;
-            this->issueTime = 0;
+            this->diskEndTime = 0;
             this->state = ADD;
             this->requestedTrack = Track;
-            this->startingTime = 0;
+            this->diskStartTime = 0;
+            this->reqAddTime = 0;
         }
 
        int getRid(){
@@ -46,10 +44,6 @@ class IO_Req {
             this->state = state;
         }
 
-        int getTrack(){
-            return Track;
-        }
-
         int getRequestedTrack(){
             return requestedTrack;
         }
@@ -58,13 +52,30 @@ class IO_Req {
             return arrTime;
         }
 
-        void setStartingTime(int time){
-             startingTime = time;
+        void setDiskStartTime(int time){
+             diskStartTime = time;
         }
 
-        int getStartingTime(){
-            return startingTime;
+        int getDiskStartTime(){
+            return diskStartTime;
         }
+
+        int getDiskEndTime(){
+            return diskEndTime;
+        }
+
+        void setDiskEndTime(int time){
+            diskEndTime = time;
+        }
+
+        int getReqAddTime(){
+            return reqAddTime;
+        }
+
+        void setReqAddTime(int time){
+            reqAddTime = time;
+        }
+
 
 };
 int IO_Req::Req_Counter= 0;
