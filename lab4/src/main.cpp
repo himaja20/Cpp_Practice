@@ -14,6 +14,7 @@
 #include "myComparison.h"
 #include "AbstractDiskScheduler.h"
 #include "FIFO.h"
+#include "SSTF.h"
 
 using namespace std;
 
@@ -27,11 +28,11 @@ void getAlgObj(char* opArg){
         case 'i':
             algObj = new FIFO();
             break;
+
+        case 'j':
+            algObj = new SSTF();
     }
 }
-
-
-
 
 int main(int argc, char* argv[]){
     char* FILE_NAME;

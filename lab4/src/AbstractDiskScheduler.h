@@ -10,7 +10,7 @@ public:
         AbstractDiskScheduler(){}
 
         
-        virtual IO_Req* getNewRequest() = 0;
+        virtual IO_Req* getNewRequest(int curTrackLoc) = 0;
         virtual void addRequest(IO_Req* req) = 0;
         //virtual string get_schedulerName() = 0;
 

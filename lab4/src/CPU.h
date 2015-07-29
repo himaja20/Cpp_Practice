@@ -62,63 +62,64 @@ class CPU {
                     curReq->setState(IO_Req::FINISH);
                     eventQ.push(new Event(nextEventTime,curReq->getRid(),curReq->getState()));
                     totalHeadMovements += abs(curTrackNum - curReq->getRequestedTrack());
-                    CpuLock = false;
+                    curTrackNum = curReq->getRequestedTrack();
                 }   
                 else if(curEvent->getState() == IO_Req::FINISH){
                     cout << curTimeStamp << ":  " << setw(4) << setfill(' ') << curEvent->getRid() << " " << "finish" << " " 
                         << curTimeStamp - curReq->getReqAddTime() << endl;
                     curReq->setDiskEndTime(curTimeStamp);
-                    curTrackNum = curReq->getRequestedTrack();
                     totalTurnAroundTime += curTimeStamp - curReq->getReqAddTime();
+
                 }
-                if ((curTimeStamp >= nextCPUFreeTime) && (CpuLock == false)){
-                    IO_Req* newReq = ds->getNewRequest();
+
+                //if ((curTimeStamp >= nextCPUFreeTime) && (CpuLock == false)){
+                if(curTimeStamp >= nextCPUFreeTime) {
+                    IO_Req* newReq = ds->getNewRequest(curTrackNum);
                     if (newReq != NULL ) {
-                        CpuLock = true;
                         eventQ.push(new Event(curTimeStamp,newReq->getRid(),newReq->getState()));
-                    }
+                        nextCPUFreeTime = curTimeStamp + abs(newReq->getRequestedTrack() - curTrackNum);
+                    }   
 
                 }
+                }
+                totalTime = curTimeStamp;
             }
 
-            totalTime = curTimeStamp;
-        }
+            void printFinalInfo(map<int,IO_Req*>& IO_ReqMap){
 
-        void printFinalInfo(map<int,IO_Req*>& IO_ReqMap){
+                int ReqId, arrTime, diskStartTime, diskEndTime;
+                double IO_ReqMapSize = (double)IO_ReqMap.size();
+                double avgTurnAroundTime = 0.0;
+                double avgWaitTime = 0.0;
+                int maxWaitTime;
 
-            int ReqId, arrTime, diskStartTime, diskEndTime;
-            double IO_ReqMapSize = (double)IO_ReqMap.size();
-            double avgTurnAroundTime = 0.0;
-            double avgWaitTime = 0.0;
-            int maxWaitTime;
+                avgTurnAroundTime = totalTurnAroundTime/IO_ReqMapSize; 
+                avgWaitTime = totalWaitTime/IO_ReqMapSize;
 
-            avgTurnAroundTime = totalTurnAroundTime/IO_ReqMapSize; 
-            avgWaitTime = totalWaitTime/IO_ReqMapSize;
-            
-            for(vector<int>::iterator it = waitTimes.begin(); it!=waitTimes.end();it++)
-            { 
-                
-                (maxWaitTime < *it)?(maxWaitTime = *it):(maxWaitTime = maxWaitTime);
-                
+                for(vector<int>::iterator it = waitTimes.begin(); it!=waitTimes.end();it++)
+                { 
+
+                    (maxWaitTime < *it)?(maxWaitTime = *it):(maxWaitTime = maxWaitTime);
+
+                }
+
+                cout << "IOREQS INFO" << endl;
+                for(map<int,IO_Req*>::iterator it = IO_ReqMap.begin(); it!=IO_ReqMap.end(); it++)
+                {
+                    IO_Req* req = IO_ReqMap[it->first];
+                    ReqId = req->getRid();
+                    arrTime = req->getArrTime();
+                    diskStartTime = req->getDiskStartTime();
+                    diskEndTime = req->getDiskEndTime();
+                    cout << setw(5) << setfill(' ') << ReqId << ":" << " " << setw(5) << setfill(' ')  
+                        << arrTime << " " << setw(5) << setfill(' ') << diskStartTime << " " << setw(5) << setfill(' ') << diskEndTime << endl;
+
+                } 
+
+                cout << "SUM: " << totalTime << " " << totalHeadMovements << " " << fixed << setprecision(2) << avgTurnAroundTime 
+                    << " " << fixed << setprecision(2) << avgWaitTime << " " << maxWaitTime << endl;
+
+
             }
 
-            cout << "IOREQS INFO" << endl;
-            for(map<int,IO_Req*>::iterator it = IO_ReqMap.begin(); it!=IO_ReqMap.end(); it++)
-            {
-                IO_Req* req = IO_ReqMap[it->first];
-                ReqId = req->getRid();
-                arrTime = req->getArrTime();
-                diskStartTime = req->getDiskStartTime();
-                diskEndTime = req->getDiskEndTime();
-                cout << setw(5) << setfill(' ') << ReqId << ":" << " " << setw(5) << setfill(' ')  
-                    << arrTime << " " << setw(5) << setfill(' ') << diskStartTime << " " << setw(5) << setfill(' ') << diskEndTime << endl;
-
-            } 
-
-            cout << "SUM: " << totalTime << " " << totalHeadMovements << " " << fixed << setprecision(2) << avgTurnAroundTime 
-                << " " << fixed << setprecision(2) << avgWaitTime << " " << maxWaitTime << endl;
-
-
-        }
-
-};
+        };

@@ -11,7 +11,7 @@ public:
 
     FIFO() : AbstractDiskScheduler(){}
 
-    IO_Req* getNewRequest(){
+    IO_Req* getNewRequest(int curTrackLoc){
         
         if (IO_queue.size() == 0){
             return NULL;
