@@ -15,22 +15,33 @@
 #include "AbstractDiskScheduler.h"
 #include "FIFO.h"
 #include "SSTF.h"
+#include "SCAN.h"
+#include "CSCAN.h"
+#include "FSCAN.h"
 
 using namespace std;
+
 
 AbstractDiskScheduler* algObj;
 
 void getAlgObj(char* opArg){
-    
     char c = opArg[0];
     switch(c){
-    
         case 'i':
             algObj = new FIFO();
             break;
-
         case 'j':
             algObj = new SSTF();
+            break;
+        case 's':
+            algObj = new SCAN();
+            break;
+        case 'c':
+            algObj = new CSCAN();
+            break;
+        case 'f':
+            algObj = new FSCAN();
+            break;
     }
 }
 
@@ -41,14 +52,14 @@ int main(int argc, char* argv[]){
     int track = 0; 
     string line;
 
-    
+
     priority_queue<Event*,vector<Event*>,myComparison> eventQ;
     map<int,IO_Req*> IO_ReqMap;
 
     int c = 0;
     if((c = getopt(argc, argv, "s:")) != -1)
     {
-         getAlgObj(optarg);
+        getAlgObj(optarg);
     }
 
     FILE_NAME = argv[optind];
@@ -67,17 +78,17 @@ int main(int argc, char* argv[]){
             stringstream ss(line);
             if(line[0] != '#'){
                 while(ss >> time >> track){
-                IO_Req* newReq = new IO_Req(time,track);
-                IO_ReqMap.insert(pair<int,IO_Req*>(newReq->getRid(),newReq));
-                Event* newEvent = new Event(newReq->getArrTime(),newReq->getRid(),IO_Req::ADD);
-                eventQ.push(newEvent);
+                    IO_Req* newReq = new IO_Req(time,track);
+                    IO_ReqMap.insert(pair<int,IO_Req*>(newReq->getRid(),newReq));
+                    Event* newEvent = new Event(newReq->getArrTime(),newReq->getRid(),IO_Req::ADD);
+                    eventQ.push(newEvent);
                 }   
-                    
-                }
+
             }
         }
-        cpuObj->start_IO(eventQ,IO_ReqMap,algObj);
-        cpuObj->printFinalInfo(IO_ReqMap);
+    }
+    cpuObj->start_IO(eventQ,IO_ReqMap,algObj);
+    cpuObj->printFinalInfo(IO_ReqMap);
 }
 
 
