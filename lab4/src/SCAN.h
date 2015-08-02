@@ -95,7 +95,7 @@ class SCAN : public AbstractDiskScheduler {
             }
 
             int i = 0;
-            while(i < IO_queue.size() && IO_queue[i]->getRequestedTrack() < req->getRequestedTrack()){
+            while(i < IO_queue.size() && IO_queue[i]->getRequestedTrack() <= req->getRequestedTrack()){
                 i++;
             }
 

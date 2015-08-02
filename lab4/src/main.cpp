@@ -51,17 +51,26 @@ int main(int argc, char* argv[]){
     int time =0;
     int track = 0; 
     string line;
+    bool verbose = false;
 
 
     priority_queue<Event*,vector<Event*>,myComparison> eventQ;
     map<int,IO_Req*> IO_ReqMap;
 
     int c = 0;
-    if((c = getopt(argc, argv, "s:")) != -1)
+    while((c = getopt(argc, argv, "vs:")) != -1)
     {
-        getAlgObj(optarg);
-    }
+        switch(c){
+            case 's':
+            getAlgObj(optarg);
+            break;
 
+            case 'v':
+            verbose = true;
+            break;
+        }
+    }
+    
     FILE_NAME = argv[optind];
 
     ifstream fin(FILE_NAME, ios::in | ios::binary);
@@ -87,16 +96,6 @@ int main(int argc, char* argv[]){
             }
         }
     }
-    cpuObj->start_IO(eventQ,IO_ReqMap,algObj);
-    cpuObj->printFinalInfo(IO_ReqMap);
+    cpuObj->start_IO(eventQ,IO_ReqMap,algObj,verbose);
+    cpuObj->printFinalInfo(IO_ReqMap,verbose);
 }
-
-
-
-
-
-
-
-
-
-
