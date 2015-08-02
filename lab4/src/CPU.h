@@ -15,7 +15,6 @@ class CPU {
         int totalHeadMovements;
         int totalTurnAroundTime;
         int totalWaitTime;
-        bool CpuLock;
         vector<int> waitTimes;
 
 
@@ -27,7 +26,6 @@ class CPU {
             this->totalHeadMovements = 0;
             this->totalTurnAroundTime = 0;
             this->totalWaitTime = 0;
-            this->CpuLock = false;
             waitTimes = vector<int>(0);
         }
 
@@ -38,6 +36,7 @@ class CPU {
             int nextCPUFreeTime = 0;
             int curTrackNum = 0;
             int curTimeStamp = 0;
+            bool CpuLock = false;
             while(eventQ.size() > 0){ 
                 Event* curEvent = eventQ.top();
                 eventQ.pop();
@@ -55,20 +54,24 @@ class CPU {
                 else if (curEvent->getState() == IO_Req::ISSUE) {
                     int nextEventTime;
                     curReq->setDiskStartTime(curTimeStamp);
+
                     totalWaitTime += curReq->getDiskStartTime() - curReq->getReqAddTime();
                     waitTimes.push_back(curReq->getDiskStartTime() - curReq->getReqAddTime());
+
                     nextEventTime = curTimeStamp + abs(curTrackNum - curReq->getRequestedTrack());
-                    nextCPUFreeTime = curTimeStamp + abs(curTrackNum - curReq->getRequestedTrack());
+
+                    //nextCPUFreeTime = curTimeStamp + abs(curTrackNum - curReq->getRequestedTrack());
+
                     if(verbose){
                         cout << curTimeStamp << ":  " << setw(4) << setfill(' ') << 
                             curEvent->getRid() << " " << "issue" << " " << curReq->getRequestedTrack() << " "
                             << curTrackNum << endl;}
                     curReq->setState(IO_Req::FINISH);
+
                     eventQ.push(new Event(nextEventTime,curReq->getRid(),curReq->getState()));
                     totalHeadMovements += abs(curTrackNum - curReq->getRequestedTrack());
                     curTrackNum = curReq->getRequestedTrack();
                     CpuLock = false;
-
                 }   
                 else if(curEvent->getState() == IO_Req::FINISH){
                     if(verbose){
@@ -76,18 +79,15 @@ class CPU {
                             << curTimeStamp - curReq->getReqAddTime() << endl;}
                     curReq->setDiskEndTime(curTimeStamp);
                     totalTurnAroundTime += curTimeStamp - curReq->getReqAddTime();
-
                 }
 
                 if ((curTimeStamp >= nextCPUFreeTime) && (CpuLock == false)){
-                //if(curTimeStamp >= nextCPUFreeTime) {
                     IO_Req* newReq = ds->getNewRequest(curTrackNum);
                     if (newReq != NULL ) {
                         eventQ.push(new Event(curTimeStamp,newReq->getRid(),newReq->getState()));
                         nextCPUFreeTime = curTimeStamp + abs(newReq->getRequestedTrack() - curTrackNum);
                         CpuLock = true;
                     }   
-
                 }
             }
             totalTime = curTimeStamp;
